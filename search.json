@@ -1,0 +1,1283 @@
+[
+  {
+    "objectID": "sessions/04-working-with-data/appendix.html",
+    "href": "sessions/04-working-with-data/appendix.html",
+    "title": "4 · Appendix — doing it again, and doing it faster",
+    "section": "",
+    "text": "Note\n\n\n\nNothing here is examinable. It is here because the answer to “but where does that number actually come from?” is worth having written down.\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\nmemclinic$group &lt;- factor(memclinic$group, levels = c(\"HC\", \"MCI\", \"AD\"))",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Appendix — doing it again, and doing it faster"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/appendix.html#loops",
+    "href": "sessions/04-working-with-data/appendix.html#loops",
+    "title": "4 · Appendix — doing it again, and doing it faster",
+    "section": "Loops",
+    "text": "Loops\n\nfor (g in levels(memclinic$group)) {\n  m &lt;- mean(memclinic$moca[memclinic$group == g])\n  cat(g, \"mean MoCA:\", round(m, 1), \"\\n\")\n}\n\nHC mean MoCA: 28.4 \nMCI mean MoCA: 25.2 \nAD mean MoCA: 19.2 \n\n\nwhile repeats until a condition fails; repeat runs until you break:\n\nx &lt;- 0\nwhile (x &lt; 3) { x &lt;- x + 1 }\nx\n\n[1] 3\n\nx &lt;- 0\nrepeat { x &lt;- x + 1; if (x == 3) break }\nx\n\n[1] 3\n\n\nnext skips the rest of one iteration, break leaves the loop entirely.\n\nPreallocate\nGrowing a vector inside a loop makes R copy the whole thing each time:\n\nout &lt;- numeric(length(levels(memclinic$group)))   # room reserved up front\nfor (i in seq_along(levels(memclinic$group))) {\n  g &lt;- levels(memclinic$group)[i]\n  out[i] &lt;- mean(memclinic$moca[memclinic$group == g])\n}\nround(out, 1)\n\n[1] 28.4 25.2 19.2\n\n\nNote seq_along() rather than 1:length(), for the reason given in the session 01 appendix.\n\n\nBut you rarely need a loop\nEverything above is one line:\n\nround(tapply(memclinic$moca, memclinic$group, mean), 1)\n\n  HC  MCI   AD \n28.4 25.2 19.2 \n\n\nIn R a loop is usually a sign that a vectorised function exists and you have not found it yet.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Appendix — doing it again, and doing it faster"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/appendix.html#the-apply-family",
+    "href": "sessions/04-working-with-data/appendix.html#the-apply-family",
+    "title": "4 · Appendix — doing it again, and doing it faster",
+    "section": "The apply family",
+    "text": "The apply family\n\nvars &lt;- c(\"age\", \"moca\", \"hippo_vol_mm3\")\n\nsapply(memclinic[, vars], mean)        # simplifies to a vector\n\n          age          moca hippo_vol_mm3 \n     69.87222      24.25000    3484.96111 \n\nsapply(memclinic[, vars], range)       # ... or a matrix\n\n     age moca hippo_vol_mm3\n[1,]  50   16          2634\n[2,]  91   30          4571\n\nstr(lapply(memclinic[, vars], mean))   # always a list\n\nList of 3\n $ age          : num 69.9\n $ moca         : num 24.2\n $ hippo_vol_mm3: num 3485\n\n\nFilter() keeps the elements matching a test:\n\nnames(Filter(is.numeric, memclinic))\n\n[1] \"age\"            \"educ_years\"     \"moca\"           \"hippo_vol_mm3\" \n[5] \"stroop_cost_ms\" \"rt_mean\"        \"csf_ptau\"      \n\n\nAnd do.call() calls a function with a list of arguments — the idiom do.call(rbind, list_of_data_frames) stacks many tables into one:\n\npieces &lt;- lapply(levels(memclinic$group), function(g) {\n  d &lt;- memclinic[memclinic$group == g, ]\n  data.frame(group = g, n = nrow(d), mean_moca = round(mean(d$moca), 1))\n})\ndo.call(rbind, pieces)",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Appendix — doing it again, and doing it faster"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/appendix.html#pipes",
+    "href": "sessions/04-working-with-data/appendix.html#pipes",
+    "title": "4 · Appendix — doing it again, and doing it faster",
+    "section": "Pipes",
+    "text": "Pipes\nA pipe passes the thing on its left into the function on its right, so that a sequence of steps reads left to right instead of inside out.\n\nsqrt(mean(memclinic$moca))              # inside out\n\n[1] 4.924429\n\nmemclinic$moca |&gt; mean() |&gt; sqrt()      # native pipe, R 4.1+\n\n[1] 4.924429\n\n\nThe lecture slides teach %&gt;% from magrittr, which is what the tidyverse uses and what you will see in WinterBreakExercises.R:\n\nlibrary(magrittr)\nmemclinic$moca %&gt;% mean %&gt;% sqrt\n\nThe two behave the same for straightforward uses like these.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Appendix — doing it again, and doing it faster"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/appendix.html#graphics-in-more-depth",
+    "href": "sessions/04-working-with-data/appendix.html#graphics-in-more-depth",
+    "title": "4 · Appendix — doing it again, and doing it faster",
+    "section": "Graphics, in more depth",
+    "text": "Graphics, in more depth\n\nColour and plotting characters\n\nplot(memclinic$hippo_vol_mm3, memclinic$stroop_cost_ms,\n     pch  = 16,\n     col  = c(\"steelblue\", \"darkorange\", \"firebrick\")[memclinic$group],\n     xlab = \"Hippocampal volume (mm³)\",\n     ylab = \"Stroop interference cost (ms)\")\n\nlegend(\"topright\",\n       legend = levels(memclinic$group),\n       col    = c(\"steelblue\", \"darkorange\", \"firebrick\"),\n       pch    = 16,\n       bty    = \"n\")\n\n\n\n\n\n\n\n\nIndexing a colour vector by a factor works because a factor is stored as the integers 1, 2, 3 — the trap from practical 2, used deliberately.\nWith many overlapping points, make them transparent:\n\nplot(memclinic$age, memclinic$rt_mean,\n     pch = 16, col = adjustcolor(\"black\", alpha.f = 0.3),\n     xlab = \"Age (years)\", ylab = \"Mean RT (ms)\")\nabline(lm(rt_mean ~ age, data = memclinic), col = \"blue\", lwd = 2)\nabline(h = mean(memclinic$rt_mean), lty = 2)   # horizontal reference line\n\n\n\n\n\n\n\n\n\n\nSaving a figure\n\npng(\"moca-by-group.png\", width = 1600, height = 1200, res = 200)\nboxplot(moca ~ group, data = memclinic, xlab = \"Diagnosis\", ylab = \"MoCA\")\ndev.off()        # REQUIRED -- this is what writes the file\n\npdf(\"moca-by-group.pdf\", width = 7, height = 5)\nboxplot(moca ~ group, data = memclinic)\ndev.off()\n\ndev.off() closes the device. Until you call it, the file is incomplete.\n\n\n\n\n\n\nWarning\n\n\n\nSeveral lecture scripts call dev.off() at the top, before any device is open, which gives\nError in dev.off() : cannot shut down device 1 (the null device)\nIt is harmless — it means there was nothing to close. Carry on.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Appendix — doing it again, and doing it faster"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/appendix.html#reshaping-the-other-ways",
+    "href": "sessions/04-working-with-data/appendix.html#reshaping-the-other-ways",
+    "title": "4 · Appendix — doing it again, and doing it faster",
+    "section": "Reshaping, the other ways",
+    "text": "Reshaping, the other ways\nreshape() leaves a note to itself about how it reshaped, which lets it go back:\n\nstroop &lt;- read.csv(\"data/stroop-rm.csv\")\nlong &lt;- reshape(stroop, direction = \"long\",\n                varying = c(\"rt_congruent\", \"rt_neutral\", \"rt_incongruent\"),\n                v.names = \"rt\", timevar = \"condition\",\n                times = c(\"congruent\", \"neutral\", \"incongruent\"), idvar = \"id\")\n\nnames(attributes(long))\n\n[1] \"row.names\"   \"names\"       \"class\"       \"reshapeLong\"\n\nhead(reshape(long, direction = \"wide\"), 2)\n\n\n  \n\n\n\nThe modern alternative is tidyr:\n\nlong2 &lt;- tidyr::pivot_longer(stroop,\n                             cols      = starts_with(\"rt_\"),\n                             names_to  = \"condition\",\n                             names_prefix = \"rt_\",\n                             values_to = \"rt\")\nhead(long2, 3)\n\n\n  \n\n\nnrow(long2)\n\n[1] 108\n\n\nEasier to read, and the same 108 rows.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Appendix — doing it again, and doing it faster"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/appendix.html#merge-in-full",
+    "href": "sessions/04-working-with-data/appendix.html#merge-in-full",
+    "title": "4 · Appendix — doing it again, and doing it faster",
+    "section": "merge(), in full",
+    "text": "merge(), in full\n\nsmall &lt;- memclinic[, c(\"id\", \"group\", \"moca\")]\nmerged &lt;- merge(stroop, small, by = \"id\")\nnrow(merged)\n\n[1] 36\n\n\nWhen the key columns have different names, or you want to keep unmatched rows:\n\nmerge(a, b, by.x = \"patient_id\", by.y = \"id\")\nmerge(a, b, by = \"id\", all.x = TRUE)    # keep every row of a (a \"left join\")\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\nIf the key is duplicated on both sides, merge() returns every matching combination — and your dataset silently grows:\n\na &lt;- data.frame(id = c(\"P01\", \"P01\"), visit = 1:2)\nb &lt;- data.frame(id = c(\"P01\", \"P01\"), score = c(10, 20))\nnrow(a); nrow(b)\n\n[1] 2\n\n\n[1] 2\n\nnrow(merge(a, b, by = \"id\"))    # not 2\n\n[1] 4\n\n\nTwo rows and two rows gave four. Always check nrow() before and after a merge. This is the most common way to corrupt a dataset without ever seeing an error.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Appendix — doing it again, and doing it faster"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/appendix.html#locale-encoding-and-excel",
+    "href": "sessions/04-working-with-data/appendix.html#locale-encoding-and-excel",
+    "title": "4 · Appendix — doing it again, and doing it faster",
+    "section": "Locale, encoding, and Excel",
+    "text": "Locale, encoding, and Excel\n\nSys.getlocale(\"LC_NUMERIC\")\n\nIn much of Europe the decimal separator is a comma and CSV files use ; as the field separator. read.csv2() expects exactly that:\n\nread.csv(\"file.csv\")    # 1,234.5  and  fields separated by ,\nread.csv2(\"file.csv\")   # 1.234,5  and  fields separated by ;\n\nThis is the concrete reason for the warning in the codebook: open memclinic.csv in Excel on an Italian machine and it will offer to save it back with commas for decimals. Everything still looks like a number, and read.csv() will then read 20.3 as the text \"20,3\".",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Appendix — doing it again, and doing it faster"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/appendix.html#writing-data-out",
+    "href": "sessions/04-working-with-data/appendix.html#writing-data-out",
+    "title": "4 · Appendix — doing it again, and doing it faster",
+    "section": "Writing data out",
+    "text": "Writing data out\n\nwrite.csv(memclinic, \"my-version.csv\", row.names = FALSE)\n\nrow.names = FALSE matters. Without it R adds an unnamed first column of row numbers, which becomes a mysterious variable called X the next time anyone reads the file.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Appendix — doing it again, and doing it faster"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/appendix.html",
+    "href": "sessions/02-r-objects/appendix.html",
+    "title": "2 · Appendix — the rest of the type system",
+    "section": "",
+    "text": "Note\n\n\n\nNothing here is examinable. It is here because the answer to “but where does that number actually come from?” is worth having written down.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · Appendix — the rest of the type system"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/appendix.html#the-atomic-types-you-will-probably-never-need",
+    "href": "sessions/02-r-objects/appendix.html#the-atomic-types-you-will-probably-never-need",
+    "title": "2 · Appendix — the rest of the type system",
+    "section": "The atomic types you will probably never need",
+    "text": "The atomic types you will probably never need\nBeyond double, integer, character and logical, R has two more:\n\nz &lt;- 8 + 9i\ntypeof(z); Re(z); Im(z); Mod(z)\n\n[1] \"complex\"\n\n\n[1] 8\n\n\n[1] 9\n\n\n[1] 12.04159\n\nr &lt;- as.raw(c(1, 15, 255))\nr; typeof(r)\n\n[1] 01 0f ff\n\n\n[1] \"raw\"\n\n\ncomplex turns up in signal processing — an FFT of an EEG trace returns complex numbers. raw is bytes, and you will meet it only if you read a binary file.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · Appendix — the rest of the type system"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/appendix.html#integers-and-doubles-are-stored-differently",
+    "href": "sessions/02-r-objects/appendix.html#integers-and-doubles-are-stored-differently",
+    "title": "2 · Appendix — the rest of the type system",
+    "section": "Integers and doubles are stored differently",
+    "text": "Integers and doubles are stored differently\n\ntypeof(1); typeof(1L)\n\n[1] \"double\"\n\n\n[1] \"integer\"\n\nobject.size(1:1000000)\n\n4000048 bytes\n\nobject.size(as.numeric(1:1000000))\n\n8000048 bytes\n\n\nThe L suffix stores a whole number as an integer, at half the memory. It also accepts the other formats — 1234L, 1e4L, 0xcafeL.\nDoubles can be written several ways, all the same value:\n\nc(0.1234, 1.234e-1, 1234e-4)\n\n[1] 0.1234 0.1234 0.1234\n\n0xcafe          # hexadecimal\n\n[1] 51966\n\n\nAnd three special doubles:\n\nc(Inf, -Inf, NaN)\n\n[1]  Inf -Inf  NaN\n\n1/0; -1/0; 0/0\n\n[1] Inf\n\n\n[1] -Inf\n\n\n[1] NaN",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · Appendix — the rest of the type system"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/appendix.html#typeof-is-really-storage.mode",
+    "href": "sessions/02-r-objects/appendix.html#typeof-is-really-storage.mode",
+    "title": "2 · Appendix — the rest of the type system",
+    "section": "typeof() is really storage.mode()",
+    "text": "typeof() is really storage.mode()\n\ntypeof(mtcars)\n\n[1] \"list\"\n\nstorage.mode(mtcars)\n\n[1] \"list\"\n\n\nBoth say list, because that is how a data frame is stored. The class attribute is what makes it behave like a table. To see the actual C-level object:\n\nlobstr::sxp(mtcars)    # VECSXP -- the internal name for a generic vector",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · Appendix — the rest of the type system"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/appendix.html#structure-and-homemade-attributes",
+    "href": "sessions/02-r-objects/appendix.html#structure-and-homemade-attributes",
+    "title": "2 · Appendix — the rest of the type system",
+    "section": "structure() and homemade attributes",
+    "text": "structure() and homemade attributes\nAttributes are not only for R’s own use. You can annotate your own data:\n\nrt &lt;- structure(c(412, 455, 398),\n                units    = \"ms\",\n                task     = \"Stroop, incongruent\",\n                measured = as.Date(\"2026-03-14\"))\n\nstr(rt)\n\n num [1:3] 412 455 398\n - attr(*, \"units\")= chr \"ms\"\n - attr(*, \"task\")= chr \"Stroop, incongruent\"\n - attr(*, \"measured\")= Date[1:1], format: \"2026-03-14\"\n\nattr(rt, \"task\")\n\n[1] \"Stroop, incongruent\"\n\nmean(rt)        # the attributes do not get in the way\n\n[1] 421.6667\n\n\nThis is a lightweight way to keep a note of where numbers came from, inside the object itself. But remember that most operations discard it:\n\nattributes(rt * 2)\n\n$units\n[1] \"ms\"\n\n$task\n[1] \"Stroop, incongruent\"\n\n$measured\n[1] \"2026-03-14\"\n\n\nOnly names and dim survive.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · Appendix — the rest of the type system"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/appendix.html#why-solve-is-the-same-thing-as-fitting-a-regression",
+    "href": "sessions/02-r-objects/appendix.html#why-solve-is-the-same-thing-as-fitting-a-regression",
+    "title": "2 · Appendix — the rest of the type system",
+    "section": "Why solve() is the same thing as fitting a regression",
+    "text": "Why solve() is the same thing as fitting a regression\nPractical 2 used solve(A, b) to solve two equations in two unknowns. A regression is the same operation with more rows than unknowns.\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\ny &lt;- memclinic$stroop_cost_ms\nX &lt;- cbind(intercept = 1, hippo = memclinic$hippo_vol_mm3)\n\nhead(X, 3)\n\n     intercept hippo\n[1,]         1  3801\n[2,]         1  3546\n[3,]         1  4411\n\n# the normal equations: (X'X)^-1 X'y\nsolve(t(X) %*% X) %*% t(X) %*% y\n\n                 [,1]\nintercept 339.5534002\nhippo      -0.0641034\n\n\n\ncoef(lm(stroop_cost_ms ~ hippo_vol_mm3, data = memclinic))\n\n  (Intercept) hippo_vol_mm3 \n  339.5534002    -0.0641034 \n\n\nIdentical. lm() is a well-tested, numerically careful implementation of that one line, and everything else it gives you — standard errors, t values, diagnostics — is built on top of it.\nThis also explains why perfectly correlated predictors break a regression: t(X) %*% X becomes non-invertible, and solve() has nothing to return.\n\nXbad &lt;- cbind(1, 1:5, 2 * (1:5))    # third column is twice the second\nsolve(t(Xbad) %*% Xbad)\n\nError in `solve.default()`:\n! Lapack routine dgesv: system is exactly singular: U[3,3] = 0",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · Appendix — the rest of the type system"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/appendix.html#arrays-and-when-you-would-use-one",
+    "href": "sessions/02-r-objects/appendix.html#arrays-and-when-you-would-use-one",
+    "title": "2 · Appendix — the rest of the type system",
+    "section": "Arrays, and when you would use one",
+    "text": "Arrays, and when you would use one\n\narr &lt;- array(1:24, dim = c(2, 3, 4))\ndim(arr)\n\n[1] 2 3 4\n\narr[, , 2]\n\n     [,1] [,2] [,3]\n[1,]    7    9   11\n[2,]    8   10   12\n\n\nThe natural use in this field is a 3-D image volume, or a participants × conditions × timepoints design:\n\nset.seed(1)\nrt &lt;- array(round(rnorm(2 * 3 * 4, 450, 40)),\n            dim = c(2, 3, 4),\n            dimnames = list(participant = c(\"P01\", \"P02\"),\n                            condition   = c(\"congruent\", \"neutral\", \"incongruent\"),\n                            block       = paste0(\"b\", 1:4)))\nrt[\"P01\", , \"b1\"]\n\n  congruent     neutral incongruent \n        425         417         463 \n\napply(rt, c(\"condition\"), mean)    # average over everything but condition\n\n  congruent     neutral incongruent \n    446.750     469.125     452.000 \n\n\nIn practice you would hold this as a long data frame instead, which is what practical 4 builds — but apply() over an array margin is sometimes the clearest way to say what you mean.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · Appendix — the rest of the type system"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/appendix.html#identical-all.equal-and",
+    "href": "sessions/02-r-objects/appendix.html#identical-all.equal-and",
+    "title": "2 · Appendix — the rest of the type system",
+    "section": "identical(), all.equal(), and ==",
+    "text": "identical(), all.equal(), and ==\n\na &lt;- c(1, 2, 3)\nb &lt;- c(1, 2, 3)\n\na == b                      # elementwise, a vector\n\n[1] TRUE TRUE TRUE\n\nidentical(a, b)             # one answer: exactly the same object?\n\n[1] TRUE\n\nidentical(1L, 1)            # FALSE -- integer is not double\n\n[1] FALSE\n\nisTRUE(all.equal(1L, 1))    # TRUE -- equal to within tolerance\n\n[1] TRUE\n\n\nUse == for data, identical() for exact structural equality, and isTRUE(all.equal()) inside an if() when comparing computed decimals.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · Appendix — the rest of the type system"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html",
+    "href": "sessions/04-working-with-data/index.html",
+    "title": "4 · Working with data, and drawing it",
+    "section": "",
+    "text": "Note\n\n\n\nOptional extra practice, and unlike practicals 1 to 3 this one runs alongside no lecture at all. It covers the handling and plotting that Prof. Noventa’s analysis scripts assume you already know, and that the Introduction to R lectures do not cover. Nothing here is assessed.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#what-you-will-be-able-to-do",
+    "href": "sessions/04-working-with-data/index.html#what-you-will-be-able-to-do",
+    "title": "4 · Working with data, and drawing it",
+    "section": "What you will be able to do",
+    "text": "What you will be able to do\nBy the end of this practical you should be able to:\n\npull out the rows and columns you want, and sort a table;\ncreate a new variable by recoding an existing one;\nset the order of a factor’s levels, and say why that changes a model;\nsummarise a variable within each diagnostic group;\ndraw a histogram, a boxplot and a scatterplot, with axes a reader can understand;\nturn a wide table into a long one, which is the shape repeated-measures analyses need.\n\n\n\n\n\n\n\nNote⬇ Download this practical\n\n\n\nA zip containing the R script, the data, and an .Rproj file. Unzip it somewhere you can find again, then double-click the .Rproj.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#before-you-start",
+    "href": "sessions/04-working-with-data/index.html#before-you-start",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Before you start",
+    "text": "Before you start\n\n\n\n\n\n\nImportantOpen the .Rproj file first\n\n\n\nDouble-click the .Rproj file in this folder. If you see cannot open file 'data/memclinic.csv', run getwd() — you opened the script rather than the project.\n\n\n\n\n\n\n\n\nImportantOne line at a time — do not press Source\n\n\n\nCtrl+Enter (Cmd+Enter on a Mac) runs the current line. The Source button will fail on the whole file while any ___ blank is still unfilled.\n\n\n\n# We call dplyr and psych functions with the pkg::fun() form rather than\n# loading them, so it is always obvious where a function came from.\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\nstr(memclinic)\n\n'data.frame':   180 obs. of  10 variables:\n $ id            : chr  \"P059\" \"P102\" \"P019\" \"P001\" ...\n $ group         : chr  \"HC\" \"MCI\" \"HC\" \"HC\" ...\n $ age           : int  71 66 64 74 58 61 76 71 57 73 ...\n $ sex           : chr  \"M\" \"M\" \"F\" \"F\" ...\n $ educ_years    : int  12 12 16 12 12 5 11 13 13 13 ...\n $ moca          : int  30 24 28 28 24 28 20 18 20 19 ...\n $ hippo_vol_mm3 : int  3801 3546 4411 3871 3570 3507 2971 3190 3408 2977 ...\n $ stroop_cost_ms: int  64 129 42 56 123 158 174 154 88 184 ...\n $ rt_mean       : int  387 403 338 360 404 353 492 484 412 446 ...\n $ csf_ptau      : num  14.8 38.2 19.5 16.1 21.4 15.1 71.5 36.1 17.7 33.1 ...\n\n\nThe codebook describes every column.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#rows-and-columns",
+    "href": "sessions/04-working-with-data/index.html#rows-and-columns",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Rows and columns",
+    "text": "Rows and columns\nInside [ ], what comes before the comma chooses rows and what comes after it chooses columns.\n\nmemclinic[1:3, ]                                # first three people\n\n\n  \n\n\nmemclinic[memclinic$group == \"AD\", ][1:3, ]     # the AD patients\n\n\n  \n\n\nhead(memclinic[, c(\"id\", \"group\", \"moca\")], 3)  # three columns\n\n\n  \n\n\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\nAsking for one column with a comma gives you a vector; asking for two gives you a data frame.\n\nclass(memclinic[memclinic$group == \"AD\", \"moca\"])\n\n[1] \"integer\"\n\nclass(memclinic[memclinic$group == \"AD\", c(\"id\", \"moca\")])\n\n[1] \"data.frame\"\n\n\nThis catches people when a function suddenly complains that it was given a vector where it wanted a table.\n\n\nsubset() says the same thing more readably:\n\nsevere &lt;- subset(memclinic, group == \"AD\" & moca &lt; 20)\nnrow(severe)\n\n[1] 36\n\n\nNote it takes bare column names, with no memclinic$. It is a convenience for interactive work; inside your own functions it can behave unexpectedly, so the [ ] form is the safer habit.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#sorting",
+    "href": "sessions/04-working-with-data/index.html#sorting",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Sorting",
+    "text": "Sorting\norder() returns the positions that would put a vector in order, and you feed those back in as row numbers.\n\nsmallest &lt;- memclinic[order(memclinic$hippo_vol_mm3), ]\nhead(smallest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 3)\n\n\n  \n\n\nlargest &lt;- memclinic[order(-memclinic$hippo_vol_mm3), ]\nhead(largest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 3)\n\n\n  \n\n\n\n(sort() sorts a single vector; order() is what you need to reorder a whole table.)",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#making-new-variables",
+    "href": "sessions/04-working-with-data/index.html#making-new-variables",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Making new variables",
+    "text": "Making new variables\nifelse() works through a vector and returns one of two values for each element.\n\nmemclinic$screen &lt;- ifelse(memclinic$moca &lt; 26, \"below cut-off\", \"normal\")\ntable(memclinic$screen)\n\n\nbelow cut-off        normal \n           97            83 \n\n\nFor more than two outcomes, nested ifelse() becomes unreadable. The professor’s tool for this is case_when():\n\nmemclinic$severity &lt;- dplyr::case_when(\n  memclinic$moca &gt;= 26 ~ \"normal\",\n  memclinic$moca &gt;= 20 ~ \"mild\",\n  TRUE                 ~ \"moderate-severe\"\n)\ntable(memclinic$severity)\n\n\n           mild moderate-severe          normal \n             61              36              83 \n\n\nConditions are checked in the order you write them, and the first match wins — which is why &gt;= 26 has to come before &gt;= 20. The final TRUE is the catch-all.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#factors-and-why-their-order-matters",
+    "href": "sessions/04-working-with-data/index.html#factors-and-why-their-order-matters",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Factors, and why their order matters",
+    "text": "Factors, and why their order matters\nIn practical 2 you saw that group arrives as text, and that making it a factor sorts the levels alphabetically:\n\nlevels(factor(memclinic$group))\n\n[1] \"AD\"  \"HC\"  \"MCI\"\n\n\nAD first. That is not how anyone would present these groups, and it is not harmless, because the first level becomes the baseline that everything else is compared against.\n\ncoef(lm(moca ~ factor(group), data = memclinic))\n\n     (Intercept)  factor(group)HC factor(group)MCI \n        19.18333          9.20000          6.00000 \n\n\nThe intercept, 19.18, is the AD mean. Now set the order deliberately:\n\nmemclinic$group &lt;- factor(memclinic$group, levels = c(\"HC\", \"MCI\", \"AD\"))\nlevels(memclinic$group)\n\n[1] \"HC\"  \"MCI\" \"AD\" \n\ncoef(lm(moca ~ group, data = memclinic))\n\n(Intercept)    groupMCI     groupAD \n   28.38333    -3.20000    -9.20000 \n\n\nThe intercept is now 28.38, the HC mean, and the other two numbers are the MCI and AD deficits relative to healthy controls — which is what a clinical reader expects. Same data, same model, every number different.\n\ncontrasts(memclinic$group)\n\n    MCI AD\nHC    0  0\nMCI   1  0\nAD    0  1\n\n\nThat matrix is what R actually put into the model. Practical 6 is about nothing else.\nrelevel() moves one level to the front without retyping them all:\n\nlevels(relevel(memclinic$group, ref = \"AD\"))\n\n[1] \"AD\"  \"HC\"  \"MCI\"",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#counting",
+    "href": "sessions/04-working-with-data/index.html#counting",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Counting",
+    "text": "Counting\n\ntable(memclinic$group)\n\n\n HC MCI  AD \n 60  60  60 \n\ntable(memclinic$group, memclinic$sex)\n\n     \n       F  M\n  HC  35 25\n  MCI 35 25\n  AD  33 27\n\nround(prop.table(table(memclinic$group, memclinic$screen), 1), 2)\n\n     \n      below cut-off normal\n  HC           0.05   0.95\n  MCI          0.57   0.43\n  AD           1.00   0.00\n\n\nprop.table(..., 1) turns counts into proportions within each row, so each row sums to 1.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#summarising-by-group",
+    "href": "sessions/04-working-with-data/index.html#summarising-by-group",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Summarising by group",
+    "text": "Summarising by group\n\ntapply(memclinic$moca, memclinic$group, mean)\n\n      HC      MCI       AD \n28.38333 25.18333 19.18333 \n\n\naggregate() does the same with a formula, and handles several variables at once:\n\naggregate(moca ~ group, data = memclinic, FUN = mean)\n\n\n  \n\n\naggregate(cbind(hippo_vol_mm3, csf_ptau) ~ group, data = memclinic, FUN = mean)\n\n\n  \n\n\n\nwith() saves repeating the data frame name:\n\nwith(memclinic, tapply(hippo_vol_mm3, group, median))\n\n    HC    MCI     AD \n3855.0 3489.0 3111.5 \n\n\nThe psych package gives a fuller description, including skewness:\n\npsych::describe(memclinic[, c(\"moca\", \"hippo_vol_mm3\", \"csf_ptau\")])\n\n\n  \n\n\n\n\n\n\n\n\n\nWarning\n\n\n\nSelect the columns you want first. psych::describe(memclinic) will happily report a mean for id and group, marking them with a * — a number that means nothing. This is why the course scripts write psych::describe(memclinic[, c(\"hippo_vol_mm3\", \"stroop_cost_ms\")]) instead.\n\n\nLook at skew for csf_ptau: strongly positive, so the distribution has a long right tail and its mean sits well above its median. The next section makes that visible.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#drawing-the-data",
+    "href": "sessions/04-working-with-data/index.html#drawing-the-data",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Drawing the data",
+    "text": "Drawing the data\n\nOne variable: a histogram\n\nhist(memclinic$csf_ptau,\n     breaks = 20,\n     main   = \"CSF phosphorylated tau\",\n     xlab   = \"p-tau (pg/mL)\")\n\n\n\n\n\n\n\n\nThere is the skew from the table above.\n\n\nOne variable per group: a boxplot\n\nboxplot(moca ~ group, data = memclinic,\n        xlab = \"Diagnosis\",\n        ylab = \"MoCA score\")\n\n\n\n\n\n\n\n\nThe groups come out in clinical order because we fixed the factor levels earlier. Had we not, this plot would read AD, HC, MCI.\n\n\nTwo variables: a scatterplot\n\nplot(memclinic$hippo_vol_mm3, memclinic$stroop_cost_ms,\n     pch  = 16,\n     col  = \"grey40\",\n     xlab = \"Hippocampal volume (mm³)\",\n     ylab = \"Stroop interference cost (ms)\")\n\nabline(lm(stroop_cost_ms ~ hippo_vol_mm3, data = memclinic), col = \"blue\")\n\n\n\n\n\n\n\n\nThat abline(lm(...)) line has already fitted a regression — the kind of model the Regression 1 lecture is about.\n\n\n\n\n\n\nTipLabel your axes\n\n\n\nxlab and ylab are not decoration. No plot should leave this room with memclinic$moca written along an axis.\n\n\n\n\nSeveral plots at once\npar(mfrow = c(rows, columns)) splits the plotting area into a grid.\n\npar(mfrow = c(2, 2))\nhist(memclinic$age,  main = \"Age\",  xlab = \"years\")\nhist(memclinic$moca, main = \"MoCA\", xlab = \"score\")\nboxplot(hippo_vol_mm3 ~ group, data = memclinic, ylab = \"Hippocampal volume\")\nplot(memclinic$age, memclinic$hippo_vol_mm3,\n     xlab = \"Age\", ylab = \"Hippocampal volume\")\n\n\n\n\n\n\n\npar(mfrow = c(1, 1))     # always put it back\n\nPractical 5 opens with par(mfrow = c(2, 2)); plot(m1) to get four diagnostic plots in one figure. This is why.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#wide-and-long",
+    "href": "sessions/04-working-with-data/index.html#wide-and-long",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Wide and long",
+    "text": "Wide and long\nOur second file has one row per person and three reaction-time columns:\n\nstroop &lt;- read.csv(\"data/stroop-rm.csv\")\nhead(stroop, 3)\n\n\n  \n\n\nnrow(stroop)\n\n[1] 36\n\n\nThat is wide format. Most modelling functions want long format: one row per observation, with a column saying which condition it came from. You could build it by hand with what you already know:\n\nlong_manual &lt;- rbind(\n  data.frame(id = stroop$id, condition = \"congruent\",   rt = stroop$rt_congruent),\n  data.frame(id = stroop$id, condition = \"neutral\",     rt = stroop$rt_neutral),\n  data.frame(id = stroop$id, condition = \"incongruent\", rt = stroop$rt_incongruent)\n)\nnrow(long_manual)\n\n[1] 108\n\nhead(long_manual, 3)\n\n\n  \n\n\n\n36 people × 3 conditions = 108 rows. reshape() does it in one call:\n\nlong &lt;- reshape(stroop,\n                direction = \"long\",\n                varying   = c(\"rt_congruent\", \"rt_neutral\", \"rt_incongruent\"),\n                v.names   = \"rt\",\n                timevar   = \"condition\",\n                times     = c(\"congruent\", \"neutral\", \"incongruent\"),\n                idvar     = \"id\")\nrownames(long) &lt;- NULL\nhead(long, 3)\n\n\n  \n\n\nnrow(long)\n\n[1] 108\n\n\n\n\n\n\n\n\nTip\n\n\n\nreshape() is the least friendly function in base R. Nobody memorises its arguments — copy this call and change the names. (tidyr::pivot_longer() is the modern alternative; the appendix shows it.)\n\n\n\nJoining the two files\nstroop-rm.csv has no group column, on purpose. merge() attaches it from the cohort file, matching on id:\n\nlong &lt;- merge(long, memclinic[, c(\"id\", \"group\", \"age\")], by = \"id\")\nhead(long, 3)\n\n\n  \n\n\ntapply(long$rt, long$condition, mean)\n\n  congruent incongruent     neutral \n   423.9167    542.8889    452.8889 \n\n\nReaction time rises from congruent to neutral to incongruent — the Stroop effect.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#the-other-way-to-draw-this",
+    "href": "sessions/04-working-with-data/index.html#the-other-way-to-draw-this",
+    "title": "4 · Working with data, and drawing it",
+    "section": "The other way to draw this",
+    "text": "The other way to draw this\nEvery regression script in this course uses ggplot2, so it is worth seeing the same picture in both dialects. The professor’s own comment in Regression1.R is “better graphic facilities with ggplot package”.\n\nlibrary(ggplot2)      # notice the masking message\n\nggplot(memclinic, aes(x = hippo_vol_mm3, y = stroop_cost_ms)) +\n  geom_point(alpha = .6) +\n  geom_smooth(method = \"lm\", se = FALSE) +\n  labs(x = \"Hippocampal volume (mm³)\",\n       y = \"Stroop interference cost (ms)\")\n\n\n\n\n\n\n\n\nThree ideas and that is enough for now: aes() says which variable maps to which part of the picture, each geom_ adds a layer, and layers are joined with +. You do not need it here, but every regression script in the course uses it, so it is worth having seen once.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#exercises",
+    "href": "sessions/04-working-with-data/index.html#exercises",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Exercises",
+    "text": "Exercises\n\nExercise 1 — find the extreme cases\nPull out the most impaired patients, then look at the extremes of hippocampal volume across the whole cohort.\n\n\nsevere &lt;- subset(memclinic, group == \"___\" & moca &lt; ___)\nnrow(severe)\n\nsevere[order(severe$___), c(\"id\", \"moca\", \"hippo_vol_mm3\")]\n\nbiggest &lt;- memclinic[order(-memclinic$hippo_vol_mm3), ]\nhead(biggest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 5)\n\n\n\n\nExercise 2 — a clinical flag, and the reference level\nCreate a screening flag, then put the factor levels in clinical order and look at what happens to the model.\n\n\nmemclinic$flag &lt;- ifelse(memclinic$moca &lt; 26, \"___\", \"___\")\ntable(memclinic$flag, memclinic$group)\n\nmemclinic$group &lt;- factor(memclinic$group,\n                          levels = c(\"___\", \"___\", \"___\"))\nlevels(memclinic$group)\n\ncoef(lm(moca ~ group, data = memclinic))\n\n\n\n\nExercise 3 — summarise by group\n\n\ntapply(memclinic$hippo_vol_mm3, memclinic$___, mean)\n\naggregate(cbind(hippo_vol_mm3, csf_ptau) ~ ___, data = memclinic, FUN = ___)\n\npsych::describe(memclinic[, c(\"___\", \"___\")])\n\n\n\n\nExercise 4 — three plots\nDraw a histogram, a boxplot and a scatterplot, each with readable axis labels.\n\n\nhist(memclinic$___,\n     breaks = 20,\n     main   = \"___\",\n     xlab   = \"___\")\n\nboxplot(___ ~ ___, data = memclinic,\n        xlab = \"Diagnosis\",\n        ylab = \"___\")\n\nplot(memclinic$age, memclinic$hippo_vol_mm3,\n     pch  = 16,\n     col  = \"grey40\",\n     xlab = \"___\",\n     ylab = \"___\")\nabline(lm(___ ~ ___, data = memclinic), col = \"blue\")\n\n\n\n\nExercise 5 — wide to long\n\n\nstroop &lt;- read.csv(\"data/___.csv\")\nnrow(stroop)\n\nlong &lt;- reshape(stroop,\n                direction = \"long\",\n                varying   = c(\"rt_congruent\", \"rt_neutral\", \"rt_incongruent\"),\n                v.names   = \"rt\",\n                timevar   = \"condition\",\n                times     = c(\"congruent\", \"neutral\", \"incongruent\"),\n                idvar     = \"id\")\nrownames(long) &lt;- NULL\nnrow(long)\n\nlong &lt;- merge(long, memclinic[, c(\"id\", \"group\")], by = \"___\")\ntapply(long$rt, long$condition, ___)",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#what-to-take-away",
+    "href": "sessions/04-working-with-data/index.html#what-to-take-away",
+    "title": "4 · Working with data, and drawing it",
+    "section": "What to take away",
+    "text": "What to take away\n\nIn df[rows, columns], the comma is what separates the two. One column with a comma gives a vector, not a table.\nifelse() for two outcomes, dplyr::case_when() for more, first match wins.\nA factor’s levels are alphabetical unless you set them. The first level is the baseline every model compares against.\ntapply() and aggregate() summarise within groups.\nLabel your axes.\nWide is for reading, long is for modelling.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#going-further",
+    "href": "sessions/04-working-with-data/index.html#going-further",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Going further",
+    "text": "Going further\nThe appendix for this session covers loops and the apply family, pipes, graphics in more depth including saving figures to file, the other ways to reshape, and how merge() can silently duplicate your rows.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html",
+    "href": "sessions/02-r-objects/index.html",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "",
+    "text": "Note⬇ Download this practical\n\n\n\nA zip containing the R script, the data, and an .Rproj file. Unzip it somewhere you can find again, then double-click the .Rproj.\nOptional extra practice alongside Introduction to R — Part 2. It does not replace the lecture, and nothing here is assessed.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#what-you-will-be-able-to-do",
+    "href": "sessions/02-r-objects/index.html#what-you-will-be-able-to-do",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "What you will be able to do",
+    "text": "What you will be able to do\n\nname the atomic types, and predict what happens when you mix them;\nbuild a vector, subset it every way there is, and replace parts of it;\nexplain why c(1, 2, 3, 4) + c(10, 20) gives an answer rather than an error;\nuse which(), any(), all() and %in%;\ntell NA from NaN from Inf;\nsee that a matrix and a factor are just vectors with attributes attached;\nbuild a factor with the levels in the order you want;\ndo matrix arithmetic, including the difference between * and %*%.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#before-you-start",
+    "href": "sessions/02-r-objects/index.html#before-you-start",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Before you start",
+    "text": "Before you start\n\n\n\n\n\n\nImportantOpen the .Rproj first, and run one line at a time\n\n\n\nDouble-click the .Rproj file in this folder. Then use Ctrl+Enter (Cmd+Enter on a Mac) line by line — do not press Source, which will fail on the whole file while any ___ blank is unfilled.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#two-kinds-of-object",
+    "href": "sessions/02-r-objects/index.html#two-kinds-of-object",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Two kinds of object",
+    "text": "Two kinds of object\n\nis.object(1:10)      # a vector is a base object\n\n[1] FALSE\n\nis.object(mtcars)    # a data.frame is an S3 object\n\n[1] TRUE\n\n\nBase objects have a base type and are what everything else is built from. S3 objects additionally carry a class, which tells R to treat them specially. The sloop package names the system:\n\nsloop::otype(1:10)     # \"base\"\nsloop::otype(mtcars)   # \"S3\"",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#atomic-types",
+    "href": "sessions/02-r-objects/index.html#atomic-types",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Atomic types",
+    "text": "Atomic types\nR stores data as one of a few atomic types:\n\nnumeric, which is either double (any real number) or integer;\ncharacter, for strings;\nlogical, TRUE or FALSE (or T / F).\n\n\ntypeof(5)\n\n[1] \"double\"\n\ntypeof(\"cat\")\n\n[1] \"character\"\n\ntypeof(TRUE)\n\n[1] \"logical\"\n\ntypeof(5L)     # the L suffix forces an integer\n\n[1] \"integer\"\n\n\n\n\n\n\n\n\nNotetypeof() and class() are not the same question\n\n\n\n\n\nclass() reports what R’s statistical machinery treats an object as; objects with no explicit class still carry an implicit one.\n\nclass(1:10)      # implicit class\n\n[1] \"integer\"\n\nclass(mtcars)    # a real S3 class\n\n[1] \"data.frame\"\n\ntypeof(mtcars)   # what it is stored as underneath\n\n[1] \"list\"\n\n\nA data frame is stored as a list. That is not a curiosity — it is the point of practical 3.\n\n\n\n\nLogicals behave like numbers\n\n5 &lt; 13\n\n[1] TRUE\n\nas.numeric(TRUE); as.numeric(FALSE)\n\n[1] 1\n\n\n[1] 0\n\nTRUE + TRUE + FALSE\n\n[1] 2\n\n\nThe Boolean operators are &lt;, &lt;=, ==, &gt;=, &gt;, !=, !, &, &&, |, ||.\n\nc(TRUE, TRUE) & c(TRUE, FALSE)    # elementwise: one answer per element\n\n[1]  TRUE FALSE\n\nTRUE && FALSE                     # a single comparison\n\n[1] FALSE\n\n\n& and | work on every element of a vector. && and || take a single TRUE or FALSE on each side and belong inside if().\n\n\n\n\n\n\nWarningThis changed in R 4.3\n\n\n\nThe lecture slides say that && and || are “applied only to the first element” of a vector. That was true until R 4.3, which turned it into an error:\n\nc(TRUE, TRUE) && c(TRUE, FALSE)\n\nError in `c(TRUE, TRUE) && c(TRUE, FALSE)`:\n! 'length = 2' in coercion to 'logical(1)'\n\n\nSo if you are following the slides on a current version of R you will see this error rather than an answer. Use & and | for vectors, and && and || only for the single conditions inside an if().\n\n\nNote also that == and identical() ask different questions:\n\nc(1, 2) == c(1, 2)\n\n[1] TRUE TRUE\n\nidentical(c(1, 2), c(1, 2))\n\n[1] TRUE\n\n\n\n\nTesting and coercing\n\nis.character(100.5)\n\n[1] FALSE\n\nis.logical(TRUE)\n\n[1] TRUE\n\nas.character(100.5)\n\n[1] \"100.5\"\n\nas.integer(\"42\")\n\n[1] 42\n\n\nEvery type has an is.something() and an as.something().\n\n\n\n\n\n\nWarning\n\n\n\nis.vector(), is.atomic() and is.numeric() do not mean quite what you would guess — check their help pages before relying on them.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#vectors",
+    "href": "sessions/02-r-objects/index.html#vectors",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Vectors",
+    "text": "Vectors\nThe vector is the most important object in R: a collection of adjacent values of one type.\n\nvec1 &lt;- c(1, 5, 9.6, 4)\nvec2 &lt;- c(\"a\", \"b\", \"9.5\")\nvec3 &lt;- c(TRUE, FALSE, FALSE)\n\ntypeof(vec1); typeof(vec2); typeof(vec3)\n\n[1] \"double\"\n\n\n[1] \"character\"\n\n\n[1] \"logical\"\n\n\n\nOne type only, and R will not ask\nIf you mix types, everything is coerced up the hierarchy:\n\nCharacter &gt; Double &gt; Integer &gt; Logical\n\n\nvec4 &lt;- c(1, 5, 9.6, 4, \"a\")\ntypeof(vec4)\n\n[1] \"character\"\n\nvec4\n\n[1] \"1\"   \"5\"   \"9.6\" \"4\"   \"a\"  \n\n\nThe quotes give it away: every number became text.\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\nNo error, no warning. If a column of numbers ever refuses to behave arithmetically, this is the first thing to check.\n\n\nTwo quick checks from the lecture — predict, then run:\n\ntypeof(c(TRUE, FALSE, FALSE, \"a\"))\n\n[1] \"character\"\n\ntypeof(c(1, 5, 9.6, 4, TRUE))\n\n[1] \"double\"\n\ntypeof(c(1, 3, 4)); typeof(c(1L, 3L, 4L))\n\n[1] \"double\"\n\n\n[1] \"integer\"\n\n\n\n\nNaming elements\n\n(vec &lt;- c(Frodo = 32, Bilbo = 64, Gandalf = 101))\n\n  Frodo   Bilbo Gandalf \n     32      64     101 \n\nlength(vec)\n\n[1] 3\n\nnames(vec)\n\n[1] \"Frodo\"   \"Bilbo\"   \"Gandalf\"\n\n\n\nvec &lt;- setNames(c(32, 64, 101), c(\"Frodo\", \"Bilbo\", \"Gandalf\"))\nvec\n\n  Frodo   Bilbo Gandalf \n     32      64     101 \n\n\nR also ships the alphabet:\n\nletters[1:5]\n\n[1] \"a\" \"b\" \"c\" \"d\" \"e\"\n\nLETTERS[1:5]\n\n[1] \"A\" \"B\" \"C\" \"D\" \"E\"",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#subsetting-a-vector",
+    "href": "sessions/02-r-objects/index.html#subsetting-a-vector",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Subsetting a vector",
+    "text": "Subsetting a vector\n\nvec &lt;- c(1, 3, 5, 7, 9, 12)\nvec[1]                 # first element\n\n[1] 1\n\nvec[-3]                # everything except the third\n\n[1]  1  3  7  9 12\n\nvec[length(vec)]       # last element\n\n[1] 12\n\nvec[c(1, 3)]           # first and third\n\n[1] 1 5\n\nvec[-c(1, 3)]          # all but first and third\n\n[1]  3  7  9 12\n\nvec[vec &gt; 3]           # everything greater than 3\n\n[1]  5  7  9 12\n\n\nBy name:\n\nnames(vec) &lt;- LETTERS[1:length(vec)]\nvec\n\n A  B  C  D  E  F \n 1  3  5  7  9 12 \n\nvec[\"A\"]\n\nA \n1 \n\n\n\nReplacing by subsetting\nAnything you can select, you can assign to:\n\nvec[3] &lt;- 8                      # replace the third\nvec[c(1, 2)] &lt;- c(44, 88)        # replace two\nvec[\"C\"] &lt;- 4                    # replace by name\nvec[vec &gt; 40] &lt;- NA              # replace everything over 40\nvec\n\n A  B  C  D  E  F \nNA NA  4  7  9 12 \n\n\nThe last line is how you censor implausible values in real data — a reaction time of 20 000 ms, say — in one line.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#patterned-vectors",
+    "href": "sessions/02-r-objects/index.html#patterned-vectors",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Patterned vectors",
+    "text": "Patterned vectors\n\nseq(from = 3, to = 10, by = 1)\n\n[1]  3  4  5  6  7  8  9 10\n\n3:10                             # the colon is a shortcut\n\n[1]  3  4  5  6  7  8  9 10\n\nseq(from = 0, to = 1, length.out = 5)\n\n[1] 0.00 0.25 0.50 0.75 1.00\n\n\n\nrep(2, 5)\n\n[1] 2 2 2 2 2\n\nrep(c(1, 2), 2)\n\n[1] 1 2 1 2\n\nrep(c(1, 2, 3), each = 2)\n\n[1] 1 1 2 2 3 3\n\nrep(c(1, 2, 3), each = 2, times = 2)\n\n [1] 1 1 2 2 3 3 1 1 2 2 3 3\n\nrep(1:3, 1:3)                    # each element repeated its own number of times\n\n[1] 1 2 2 3 3 3\n\n\nrep(..., each = ) is exactly how the diagnostic groups in memclinic.csv were built.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#recycling",
+    "href": "sessions/02-r-objects/index.html#recycling",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Recycling",
+    "text": "Recycling\n\nvec &lt;- c(1, 5, 3, 7, 9)\nvec &gt; 4        # how can R compare a length-5 vector to a length-1 one?\n\n[1] FALSE  TRUE FALSE  TRUE  TRUE\n\nvec + 100\n\n[1] 101 105 103 107 109\n\n\nR recycles the shorter vector until it matches the longer one. That is what makes vec + 100 work. But it also does this:\n\n1:3 + 1:9\n\n[1]  2  4  6  5  7  9  8 10 12\n\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\n\nc(1, 2, 3) + c(10, 20)\n\nWarning in c(1, 2, 3) + c(10, 20): longer object length is not a multiple of\nshorter object length\n\n\n[1] 11 22 13\n\n\nR only warns when the longer length is not a multiple of the shorter one. When it is a multiple, you get a wrong answer of the right length and no warning at all.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#which-any-all-in",
+    "href": "sessions/02-r-objects/index.html#which-any-all-in",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "which(), any(), all(), %in%",
+    "text": "which(), any(), all(), %in%\n\nvec &lt;- c(1, 10, 50, 100)\nwhich(vec &gt; 3 & vec &lt; 90)     # the POSITIONS of the matches\n\n[1] 2 3\n\nany(vec &gt; 3)                  # is at least one TRUE?\n\n[1] TRUE\n\nall(vec &lt;= 100)               # are they all TRUE?\n\n[1] TRUE\n\n\nNote the difference: vec[vec &gt; 3] gives you the values, which(vec &gt; 3) gives you where they are.\n\ngrp &lt;- c(\"HC\", \"MCI\", \"AD\", \"HC\")\n\"AD\" %in% grp\n\n[1] TRUE\n\ngrp %in% c(\"MCI\", \"AD\")\n\n[1] FALSE  TRUE  TRUE FALSE\n\n\nx %in% y is shorthand for “is x anywhere in y”, and works elementwise.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#element-by-element-arithmetic",
+    "href": "sessions/02-r-objects/index.html#element-by-element-arithmetic",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Element-by-element arithmetic",
+    "text": "Element-by-element arithmetic\n\nx &lt;- 1:3; y &lt;- 3:1\nx + y\n\n[1] 4 4 4\n\nx * y\n\n[1] 3 4 3\n\nx^y\n\n[1] 1 4 3\n\nx %/% y     # integer division\n\n[1] 0 1 3\n\nx %% y      # remainder\n\n[1] 1 0 0\n\n\nA use for the remainder — picking out even numbers:\n\nv &lt;- 21:40\nv[v %% 2 == 0]\n\n [1] 22 24 26 28 30 32 34 36 38 40\n\nwhich(v %% 2 == 0)\n\n [1]  2  4  6  8 10 12 14 16 18 20\n\n\n\nInner and outer product\nBecause * is elementwise, the matrix products have their own operators:\n\na &lt;- 1:3; b &lt;- 4:6\na %*% b        # inner (scalar, dot) product\n\n     [,1]\n[1,]   32\n\nouter(a, b)    # outer product\n\n     [,1] [,2] [,3]\n[1,]    4    5    6\n[2,]    8   10   12\n[3,]   12   15   18",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#missing-values",
+    "href": "sessions/02-r-objects/index.html#missing-values",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Missing values",
+    "text": "Missing values\n\nis.na(c(1, 3, NA, 4))\n\n[1] FALSE FALSE  TRUE FALSE\n\nmean(c(1, 3, NA, 4))\n\n[1] NA\n\nmean(c(1, 3, NA, 4), na.rm = TRUE)\n\n[1] 2.666667\n\n\nAny operation involving NA returns NA — the value is unknown, so anything computed from it is unknown too.\nThree different special values, easily confused:\n\ntypeof(NA)          # logical: Not Available\n\n[1] \"logical\"\n\ntypeof(NaN)         # double:  Not a Number, e.g. 0/0\n\n[1] \"double\"\n\n0 / 0\n\n[1] NaN\n\n1 / 0\n\n[1] Inf\n\nis.na(c(NA, NaN, Inf))     # TRUE for NA and NaN -- both are \"missing\"\n\n[1]  TRUE  TRUE FALSE\n\nis.nan(c(NA, NaN, Inf))    # TRUE only for NaN\n\n[1] FALSE  TRUE FALSE\n\nis.finite(c(NA, NaN, Inf))\n\n[1] FALSE FALSE FALSE\n\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\n\nv &lt;- c(1, NA, 3)\nv[v &gt; 2]\n\n[1] NA  3\n\n\nOnly one value is above 2, but two things came back. NA &gt; 2 is NA, and indexing with NA returns a missing value.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#attributes",
+    "href": "sessions/02-r-objects/index.html#attributes",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Attributes",
+    "text": "Attributes\nVectors become other objects by having attributes attached — metadata carried along with the values.\n\nx &lt;- 1:10\nattr(x, \"units\") &lt;- \"milliseconds\"\nattr(x, \"measured_by\") &lt;- \"E-Prime\"\nattributes(x)\n\n$units\n[1] \"milliseconds\"\n\n$measured_by\n[1] \"E-Prime\"\n\n\nstructure() sets them all at once:\n\nx &lt;- structure(1:10, units = \"milliseconds\", measured_by = \"E-Prime\")\nstr(x)\n\n int [1:10] 1 2 3 4 5 6 7 8 9 10\n - attr(*, \"units\")= chr \"milliseconds\"\n - attr(*, \"measured_by\")= chr \"E-Prime\"\n\n\nMost attributes are lost by most operations:\n\nattributes(x[1])\n\nNULL\n\n\nNULL means an empty vector — here, no attributes at all. Two attributes are always preserved: names and dim.\n\ndim turns a vector into a matrix\n\nmat1 &lt;- matrix(1:8, nrow = 2, ncol = 4)\n\nmat2 &lt;- 1:8\ndim(mat2) &lt;- c(2, 4)     # just adding an attribute\n\nidentical(mat1, mat2)\n\n[1] TRUE\n\n\nA matrix is not a new kind of thing. It is a vector with a dim attribute.\n\n\nclass turns a vector into a factor\n\nsummary(c(1, 2, 1, 2, 1, 1, 1, 2))\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n  1.000   1.000   1.000   1.375   2.000   2.000 \n\nsummary(factor(c(1, 2, 1, 2, 1, 1, 1, 2)))\n\n1 2 \n5 3 \n\n\nSame eight numbers. Assigning a class tells R to use a different version of summary() — a mean for numbers, counts for categories.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#factors",
+    "href": "sessions/02-r-objects/index.html#factors",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Factors",
+    "text": "Factors\n\nvecf &lt;- c(\"A1\", \"A2\", \"A3\", \"A1\", \"A2\")\n(fac1 &lt;- factor(vecf))\n\n[1] A1 A2 A3 A1 A2\nLevels: A1 A2 A3\n\nlevels(fac1)\n\n[1] \"A1\" \"A2\" \"A3\"\n\n\nUnderneath, a factor is an integer vector with two attributes:\n\ntypeof(fac1)\n\n[1] \"integer\"\n\nclass(fac1)\n\n[1] \"factor\"\n\nattributes(fac1)\n\n$levels\n[1] \"A1\" \"A2\" \"A3\"\n\n$class\n[1] \"factor\"\n\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\nBecause the storage is integer codes, converting a factor to a number gives you the codes, not the values:\n\ndose &lt;- factor(c(10, 20, 30))\nas.numeric(dose)                    # 1 2 3 -- the codes\n\n[1] 1 2 3\n\nas.numeric(as.character(dose))      # 10 20 30 -- the fix\n\n[1] 10 20 30\n\n\n\n\n\ntable(), and empty levels\n\nsex_char   &lt;- c(\"m\", \"m\", \"m\")\nsex_factor &lt;- factor(sex_char, levels = c(\"m\", \"f\"))\n\ntable(sex_char)\n\nsex_char\nm \n3 \n\ntable(sex_factor)\n\nsex_factor\nm f \n3 0 \n\n\nThe factor version reports f: 0. A character vector cannot know that “f” was a possible answer; a factor can, because you told it. This matters whenever a group happens to have no observations — a factor keeps the empty cell, text silently drops it.\n\n\nOrdered factors\n\nseverity &lt;- factor(c(\"mild\", \"severe\", \"moderate\"),\n                   levels  = c(\"mild\", \"moderate\", \"severe\"),\n                   ordered = TRUE)\nseverity\n\n[1] mild     severe   moderate\nLevels: mild &lt; moderate &lt; severe\n\nclass(severity)\n\n[1] \"ordered\" \"factor\" \n\nseverity[1] &lt; severity[2]\n\n[1] TRUE\n\n\nAn ordered factor knows its levels have a direction, so comparisons work.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#matrices",
+    "href": "sessions/02-r-objects/index.html#matrices",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Matrices",
+    "text": "Matrices\n\nmat &lt;- matrix(c(1, 2), nrow = 2, ncol = 2)   # c(1,2) is recycled\ncolnames(mat) &lt;- letters[1:2]\nrownames(mat) &lt;- LETTERS[1:2]\nmat\n\n  a b\nA 1 1\nB 2 2\n\n\nLike vectors, a matrix holds one type:\n\ntypeof(matrix(c(1, 2, 3, TRUE, FALSE, FALSE), 3, 2))\n\n[1] \"double\"\n\ntypeof(matrix(c(\"a\", \"b\", \"c\", 1, 2, 3), 3, 2))\n\n[1] \"character\"\n\n\n\nSubsetting\n\nmat &lt;- matrix(1:6, nrow = 2, ncol = 3)\nmat\n\n     [,1] [,2] [,3]\n[1,]    1    3    5\n[2,]    2    4    6\n\ndim(mat); nrow(mat); ncol(mat)\n\n[1] 2 3\n\n\n[1] 2\n\n\n[1] 3\n\nmat[1, 3]      # row 1, column 3\n\n[1] 5\n\nmat[2, ]       # all of row 2\n\n[1] 2 4 6\n\nmat[, 2]       # all of column 2\n\n[1] 3 4\n\nmat[, -2]      # drop column 2\n\n     [,1] [,2]\n[1,]    1    5\n[2,]    2    6\n\nmat[1:2, 1:2]  # a block\n\n     [,1] [,2]\n[1,]    1    3\n[2,]    2    4\n\n\nEvery subsetting method you learned for vectors works here too.\n\n\nBinding, diagonal, transpose\n\nA &lt;- matrix(1:6, 2, 3)\nB &lt;- matrix(6:1, 2, 3)\n\ncbind(A, B)\n\n     [,1] [,2] [,3] [,4] [,5] [,6]\n[1,]    1    3    5    6    4    2\n[2,]    2    4    6    5    3    1\n\nrbind(A, B)\n\n     [,1] [,2] [,3]\n[1,]    1    3    5\n[2,]    2    4    6\n[3,]    6    4    2\n[4,]    5    3    1\n\n\n\nM &lt;- matrix(c(1, 2), 2, 2)\ndiag(M)          # the diagonal of a matrix\n\n[1] 1 2\n\ndiag(c(1, 2))    # ... or build a diagonal matrix\n\n     [,1] [,2]\n[1,]    1    0\n[2,]    0    2\n\nt(A)             # transpose\n\n     [,1] [,2]\n[1,]    1    2\n[2,]    3    4\n[3,]    5    6\n\n\n\n\nArithmetic, and the two products\n\nmatrix(1:6, 2, 3) + matrix(6:1, 2, 3)\n\n     [,1] [,2] [,3]\n[1,]    7    7    7\n[2,]    7    7    7\n\nmatrix(1:6, 2, 3) - matrix(6:1, 2, 3)\n\n     [,1] [,2] [,3]\n[1,]   -5   -1    3\n[2,]   -3    1    5\n\n\n\nmatrix(1/(1:6), 2, 3) * matrix(1:6, 2, 3)        # elementwise\n\n     [,1] [,2] [,3]\n[1,]    1    1    1\n[2,]    1    1    1\n\nmatrix(1/(1:6), 2, 3) %*% matrix(1:6, 3, 2)      # matrix product\n\n         [,1]     [,2]\n[1,] 2.266667 6.866667\n[2,] 1.500000 4.250000\n\n\n* multiplies position by position and needs identical shapes. %*% is the matrix product and needs the inner dimensions to agree.\n\n\nDeterminant, inverse, and solving systems\n\nM &lt;- matrix(1:4, 2)\ndet(M)\n\n[1] -2\n\nsolve(M)              # the inverse\n\n     [,1] [,2]\n[1,]   -2  1.5\n[2,]    1 -0.5\n\nM %*% solve(M)        # ... which gives the identity\n\n     [,1] [,2]\n[1,]    1    0\n[2,]    0    1\n\n\nsolve() with two arguments solves a linear system. The system\n\\[\\begin{cases} y = x + 3 \\\\ y = -x + 3\\end{cases}\\]\nbecomes:\n\nA1 &lt;- matrix(c(-1, 1, 1, 1), 2)\nsolve(A1, c(3, 3))\n\n[1] 0 3\n\n\nThis is not an aside: fitting a regression is solving a system of exactly this kind — which is what lm() does once the course reaches Regression 1.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#arrays",
+    "href": "sessions/02-r-objects/index.html#arrays",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Arrays",
+    "text": "Arrays\n\narr &lt;- array(1:24, dim = c(2, 3, 4))\ndim(arr)\n\n[1] 2 3 4\n\narr[1, 2, 3]     # one element\n\n[1] 15\n\narr[, , 1]       # the first 2x3 slice\n\n     [,1] [,2] [,3]\n[1,]    1    3    5\n[2,]    2    4    6\n\n\nAn array is a vector with a longer dim. Vectors, matrices and arrays are all base objects — the same thing wearing different attributes.\n\nvec1 &lt;- c(25, 24, 21, 23, 22, 31, 45, 90)\nmat1 &lt;- matrix(vec1, 2, 4)\narr1 &lt;- array(vec1, c(2, 2, 2))\n\nis.object(vec1)\n\n[1] FALSE\n\nclass(vec1); class(mat1); class(arr1)\n\n[1] \"numeric\"\n\n\n[1] \"matrix\" \"array\" \n\n\n[1] \"array\"\n\ntypeof(vec1); typeof(mat1); typeof(arr1)\n\n[1] \"double\"\n\n\n[1] \"double\"\n\n\n[1] \"double\"",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#exercises",
+    "href": "sessions/02-r-objects/index.html#exercises",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Exercises",
+    "text": "Exercises\n\nExercise 1 — types and coercion\n\n\nmoca &lt;- c(29, 24, 18, 27, ___, ___)\ntypeof(moca)\n\n# Add one piece of text and look at what happens to the rest\nmixed &lt;- c(moca, \"missing\")\ntypeof(___)\nmixed\n\n# Logicals are numbers: how many are below the cut-off, and what proportion?\nsum(moca &lt; ___)\nmean(moca &lt; ___)\n\n\n\n\nExercise 2 — subsetting and replacing\n\n\nrt &lt;- c(412, 455, 398, 9999, 467, 421)\nnames(rt) &lt;- c(\"P01\", \"P02\", \"P03\", \"P04\", \"P05\", \"P06\")\n\nrt[\"P03\"]              # by name\nrt[-4]                 # everything except the fourth\nrt[rt &gt; 500]           # the implausible one\nwhich(rt &gt; ___)        # WHERE it is\n\n# 9999 is a recording error. Replace it with NA in one line.\nrt[rt &gt; 500] &lt;- ___\nrt\nmean(rt, na.rm = ___)\n\n\n\n\nExercise 3 — recycling, and a silent wrong answer\n\n\nrt &lt;- c(412, 455, 398, 467, 421, 430)\n\n# Subtract a baseline of 400 from every value\nrt - ___\n\n# Now subtract a vector of TWO baselines. Predict the length before you run it.\nrt - c(400, ___)\n\n# And one of length four\nrt - c(400, 410, 420, 430)\n\n\n\n\nExercise 4 — factors with the levels in the right order\n\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\n# group came in as text. Make it a factor and look at the levels.\ng_default &lt;- factor(memclinic$group)\nlevels(___)\n\n# Now set them in clinical order instead\ng_clinical &lt;- factor(memclinic$group,\n                     levels = c(\"___\", \"___\", \"___\"))\nlevels(g_clinical)\n\ntable(g_clinical)\n\n\n\n\nExercise 5 — the lecture’s matrix exercises\nThese are Exercises 1, 2, 4 and 5 from the lecture slides.\n\n\n# (1) Build these and transpose them\n#     A is 2x4, B is 4x3, c is a 1x5 row vector\nA &lt;- matrix(c(5, -5, 7, 67, 90, -96, 1, 12), nrow = ___, ncol = ___)\nA\nt(A)\n\n# (2) With these A and B, compute B + A and B - A\nA2 &lt;- matrix(c(1, 2, 1, 2, -1, 3, 3, -2, 6), nrow = 3)\nB2 &lt;- matrix(c(4, 2, 2, 2, 3, 2, 1, 2, 0), nrow = 3)\nB2 + ___\nB2 - ___\n\n# (4) With these, compute AB and BA. Why are they different sizes?\nA3 &lt;- matrix(c(1, 3, 2, 1, 1, 0), nrow = 3)\nB3 &lt;- matrix(c(1, 2, 2, 3, 3, 4), nrow = 2)\nA3 %*% ___\nB3 %*% ___\n\n# (5) Determinant and inverse, and check that A A^-1 is the identity\nA4 &lt;- matrix(c(11, 3, 3, 2), nrow = 2)\ndet(___)\nsolve(___)\nA4 %*% solve(A4)",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#what-to-take-away",
+    "href": "sessions/02-r-objects/index.html#what-to-take-away",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "What to take away",
+    "text": "What to take away\n\nA vector holds one type. Mixing types coerces silently, upward: Character &gt; Double &gt; Integer &gt; Logical.\nAnything you can select, you can assign to.\nR recycles a short vector to match a long one, and only warns when the lengths do not divide evenly.\nNA is unknown, NaN is not a number, Inf is infinite. is.na() is TRUE for the first two.\nA matrix is a vector with a dim; a factor is an integer vector with levels and a class. Attributes are what make them different.\n* is elementwise, %*% is the matrix product.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "sessions/02-r-objects/index.html#going-further",
+    "href": "sessions/02-r-objects/index.html#going-further",
+    "title": "2 · R objects, attributes, matrices",
+    "section": "Going further",
+    "text": "Going further\nThe appendix covers the remaining atomic types, integer versus double storage, structure() in more depth, arrays, and why solve() is the same operation as fitting a regression.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "2 · R objects, attributes, matrices"
+    ]
+  },
+  {
+    "objectID": "setup.html",
+    "href": "setup.html",
+    "title": "Setting up R",
+    "section": "",
+    "text": "Do this before you start practical 1. If something fails, keep the error message — it is much faster to fix than a blank screen.",
+    "crumbs": [
+      "Start here",
+      "Setting up R"
+    ]
+  },
+  {
+    "objectID": "setup.html#install-r-and-rstudio",
+    "href": "setup.html#install-r-and-rstudio",
+    "title": "Setting up R",
+    "section": "1. Install R and RStudio",
+    "text": "1. Install R and RStudio\nInstall R first, then RStudio. They are two separate downloads.\n\nR: https://cran.r-project.org\nRStudio Desktop (free): https://posit.co/download/rstudio-desktop/\n\nOpen RStudio. If the console shows a version line starting R version 4. you are ready.",
+    "crumbs": [
+      "Start here",
+      "Setting up R"
+    ]
+  },
+  {
+    "objectID": "setup.html#install-the-packages",
+    "href": "setup.html#install-the-packages",
+    "title": "Setting up R",
+    "section": "2. Install the packages",
+    "text": "2. Install the packages\nCopy this into the RStudio console and press Enter. It will take a few minutes.\n\ninstall.packages(c(\"dplyr\", \"ggplot2\", \"psych\", \"tibble\", \"tidyr\"))\n\nThat is everything these four practicals need. A couple of the appendices show optional asides using lobstr, sloop, purrr and magrittr; those chunks are not run for you, and each says what to install if you want to try it.\nProf. Noventa’s own scripts use many more packages than this. Install those when you reach the script that needs them, not now.",
+    "crumbs": [
+      "Start here",
+      "Setting up R"
+    ]
+  },
+  {
+    "objectID": "setup.html#check-it-worked",
+    "href": "setup.html#check-it-worked",
+    "title": "Setting up R",
+    "section": "3. Check it worked",
+    "text": "3. Check it worked\n\nlibrary(ggplot2)\nggplot(mtcars, aes(wt, mpg)) + geom_point()\n\nA scatterplot in the Plots pane means you are set up correctly.",
+    "crumbs": [
+      "Start here",
+      "Setting up R"
+    ]
+  },
+  {
+    "objectID": "setup.html#working-directories-and-why-there-is-no-setwd",
+    "href": "setup.html#working-directories-and-why-there-is-no-setwd",
+    "title": "Setting up R",
+    "section": "Working directories, and why there is no setwd()",
+    "text": "Working directories, and why there is no setwd()\nEvery practical folder contains an .Rproj file. Double-click it, and RStudio opens with the working directory already set to that folder — so read.csv(\"data/memclinic.csv\") just works.\nThis is why you will never see setwd(\"C:/Users/...\") in these scripts. A path like that only works on the machine it was typed on.",
+    "crumbs": [
+      "Start here",
+      "Setting up R"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Getting started with R",
+    "section": "",
+    "text": "ImportantThis is not the course material\n\n\n\nThe course is taught from Prof. Noventa’s lectures and his R scripts, which are on Moodle. Those are what you are assessed on.\nThis site is optional. It exists for one reason: if you have never used R before, the first thing you meet in this course is a script that opens with library() and a model fit on line 1. These four practicals are the part nobody teaches — enough R that those scripts become readable.\nIf you already use R, you can skip all of it.",
+    "crumbs": [
+      "Start here"
+    ]
+  },
+  {
+    "objectID": "index.html#what-is-here",
+    "href": "index.html#what-is-here",
+    "title": "Getting started with R",
+    "section": "What is here",
+    "text": "What is here\nFour practicals. The first three run alongside the Introduction to R lectures, one each, covering the same ground more slowly and with exercises. The fourth covers something the lectures do not: handling and plotting data, which every analysis script in the course quietly assumes you can already do.\n\n\n\n#\nPractical\nAlongside\nWhat it covers\n\n\n\n\n01\nBasics of R\nIntroduction to R, Part 1\ncalculator, objects, help, workspace, reading data\n\n\n02\nR objects, attributes, matrices\nIntroduction to R, Part 2\ntypes, vectors, subsetting, recycling, NA, factors, matrices\n\n\n03\nLists, data frames, control flow, functions\nIntroduction to R, Part 3\nlists, data frames, tibbles, if/for, writing functions\n\n\n04\nWorking with data, and drawing it\n—\nsubsetting, recoding, summaries, base graphics, wide ↔︎ long\n\n\n\nEach practical also has an appendix — optional asides for anyone who wants to know why something works. Nothing in an appendix is needed for anything else.\nThe material stops where the statistics begins. Regression and everything after it is the course’s own, and Prof. Noventa’s scripts are where you should learn it.",
+    "crumbs": [
+      "Start here"
+    ]
+  },
+  {
+    "objectID": "index.html#two-ways-to-use-it",
+    "href": "index.html#two-ways-to-use-it",
+    "title": "Getting started with R",
+    "section": "Two ways to use it",
+    "text": "Two ways to use it\nYou can read it in the browser — every practical is a page on this site, with all the code and its output already shown.\nOr you can download it and run it, which is the point. Each practical has a download link at the top of its page, giving you a zip containing:\n\nthe .R script for that practical,\na data/ folder with the data and a codebook explaining every variable,\nan .Rproj file.\n\nUnzip it, then double-click the .Rproj before opening the script. That sets R’s working directory for you, which is why none of these scripts contain a setwd() line.\nThe page and the script contain exactly the same material — they are generated from one source, so they cannot disagree.",
+    "crumbs": [
+      "Start here"
+    ]
+  },
+  {
+    "objectID": "index.html#solutions",
+    "href": "index.html#solutions",
+    "title": "Getting started with R",
+    "section": "Solutions",
+    "text": "Solutions\nEvery exercise has a worked solution, and they are not shown at first. Each practical’s answers appear on this site after that practical has been covered in class. Try the exercise first; the answer is worth much more once you have been stuck on it.",
+    "crumbs": [
+      "Start here"
+    ]
+  },
+  {
+    "objectID": "index.html#before-you-start",
+    "href": "index.html#before-you-start",
+    "title": "Getting started with R",
+    "section": "Before you start",
+    "text": "Before you start\nWork through Setting up R — install R, RStudio, and the four packages the practicals use. Do that before anything else, not while you are trying to follow a practical.\n\n\n\n\n\n\nTipOne habit worth forming now\n\n\n\nRun code one line at a time with Ctrl+Enter (Cmd+Enter on a Mac), and read what each line prints. Do not press Source — the exercises contain ___ blanks for you to fill in, and Source tries to parse the whole file at once, so a single unfilled blank stops everything before any of it runs.",
+    "crumbs": [
+      "Start here"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html",
+    "href": "sessions/01-r-basics/index.html",
+    "title": "1 · Basics of R",
+    "section": "",
+    "text": "Note⬇ Download this practical\n\n\n\nA zip containing the R script, the data, and an .Rproj file. Unzip it somewhere you can find again, then double-click the .Rproj.\nOptional extra practice alongside Introduction to R — Part 1. It does not replace the lecture, and nothing here is assessed.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#what-you-will-be-able-to-do",
+    "href": "sessions/01-r-basics/index.html#what-you-will-be-able-to-do",
+    "title": "1 · Basics of R",
+    "section": "What you will be able to do",
+    "text": "What you will be able to do\n\nuse R as a calculator, and recognise when floating-point arithmetic has tricked you;\ncreate objects, and say what &lt;- does that = does not;\nfind your way around the help system;\nsee what is in your workspace, and clear it;\nset up a working directory properly, and read a data file from it;\nrun str() on anything and read what it tells you.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#before-you-start",
+    "href": "sessions/01-r-basics/index.html#before-you-start",
+    "title": "1 · Basics of R",
+    "section": "Before you start",
+    "text": "Before you start\n\n\n\n\n\n\nImportantOpen the .Rproj file first\n\n\n\nDouble-click the .Rproj file in this folder before anything else. That sets R’s working directory, which is why nothing here calls setwd().\nIf you later see\ncannot open file 'data/memclinic.csv': No such file or directory\nrun getwd() and list.files(). If there is no data folder in the list, you opened the script instead of the project. Close RStudio and double-click the .Rproj file.\n\n\n\n\n\n\n\n\nImportantRun this script one line at a time — do not press Source\n\n\n\nPut your cursor on a line and press Ctrl+Enter (Cmd+Enter on a Mac).\nDo not press the Source button. R reads the whole file before it runs any of it, and the ___ blanks in the exercises are not valid R until you fill them in. Pressing Source with a blank still in the file gives Error: unexpected input and runs nothing at all.\n\n\n\n\n\n\n\n\nTipTyping the symbols on an Italian keyboard\n\n\n\n\n\n\n\n\n\n\n\n\n\nSymbol\nMac\nWindows\n\n\n\n\n&lt;-\nOption + − (RStudio inserts it for you)\nAlt + −\n\n\n~\nOption + 5\nAltGr + ì\n\n\n[ ]\nOption + è / Option + +\nAltGr + è / AltGr + +\n\n\n{ }\nShift + Option + è / Shift + Option + +\nShift + AltGr + è / +\n\n\n#\nOption + à\nAltGr + à\n\n\n\nUse the copy button in the corner of each grey box rather than selecting text — copying from a browser can turn \" into \", which R will not accept.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#r-as-a-giant-pocket-calculator",
+    "href": "sessions/01-r-basics/index.html#r-as-a-giant-pocket-calculator",
+    "title": "1 · Basics of R",
+    "section": "R as a giant pocket calculator",
+    "text": "R as a giant pocket calculator\n\n3 * (2 + 4)\n\n[1] 18\n\nsqrt(144)\n\n[1] 12\n\nexp(1)\n\n[1] 2.718282\n\nlog(100)\n\n[1] 4.60517\n\n\nThe lecture’s table of operators and functions — + - * / ^, sqrt, exp, log, sin, cos, min, max, range, length, sum, mean, var — all work this way.\nTwo things that catch everyone in the first ten minutes:\n\nIf the console shows + instead of &gt;, R is waiting for you to finish something, usually a missing bracket. Press Esc.\nR is case sensitive: Mean is not mean.\n\n\nFinite precision\n\nsqrt(2)^2 == 2\n\n[1] FALSE\n\nprint(sqrt(2)^2, digits = 22)\n\n[1] 2.000000000000000444089\n\n\nComputers approximate real numbers, so two quantities that are equal on paper may differ in the last few digits. Never test exact equality of decimals:\n\ndplyr::near(sqrt(2)^2, 2)\n\n[1] TRUE\n\n1 / 49 * 49 == 1\n\n[1] FALSE\n\ndplyr::near(1 / 49 * 49, 1)\n\n[1] TRUE\n\n\nThis is also the first time you see pkg::fun() — calling a function without loading its package. It makes clear where the function came from.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#expressions-and-assignments",
+    "href": "sessions/01-r-basics/index.html#expressions-and-assignments",
+    "title": "1 · Basics of R",
+    "section": "Expressions and assignments",
+    "text": "Expressions and assignments\nAn expression is evaluated, printed, and the value is lost. An assignment is evaluated, not printed, and the value is stored under a name.\n\n12 + 13        # an expression: shown, then gone\n\n[1] 25\n\nx &lt;- 12 + 13   # an assignment: stored, nothing shown\nx\n\n[1] 25\n\n\nWrapping the whole assignment in round brackets stores and prints:\n\n(x &lt;- 12 + 13)\n\n[1] 25\n\n\nYou will see this throughout the course as (model &lt;- lm(...)).\nOther command syntax from the lecture:\n\n12 + 13; sqrt(9)      # ';' separates commands on one line\n\n[1] 25\n\n\n[1] 3\n\n# a line starting with # is a comment and is not executed",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#or",
+    "href": "sessions/01-r-basics/index.html#or",
+    "title": "1 · Basics of R",
+    "section": "<- or =?",
+    "text": "&lt;- or =?\nBoth assign, but they are not interchangeable. The rule from the lecture:\n\nUse = to assign values to an argument in a function, and &lt;- to assign values to a variable.\n\nls() lists what is in your workspace, which makes the difference visible:\n\nrm(list = ls())     # empty the workspace first\nmean(x = 1:10)      # 'x' here names an argument of mean()\n\n[1] 5.5\n\nls()                # nothing was created\n\ncharacter(0)\n\n\n\nmean(x &lt;- 1:10)     # this ALSO creates a variable called x\n\n[1] 5.5\n\nls()\n\n[1] \"x\"\n\n\nSame answer; the second version left an object behind.\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\n\nx &lt; - 5\n\n [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE\n\nx\n\n [1]  1  2  3  4  5  6  7  8  9 10\n\n\nWith a space in the middle, &lt;- becomes &lt; followed by -, so R read it as “is x less than minus five?”, answered FALSE, and stored nothing. x is unchanged. No error, no warning.\n\n\nThere is also a function form:\n\nassign(\"y\", 13 + 14)\ny\n\n[1] 27",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#naming-things",
+    "href": "sessions/01-r-basics/index.html#naming-things",
+    "title": "1 · Basics of R",
+    "section": "Naming things",
+    "text": "Naming things\nNames may be any length, are case sensitive, and may contain letters, digits, . and _. They must start with a letter (or a dot not followed by a digit).\nThe lecture’s style advice:\n\nstick to ASCII, so your code travels;\nstart with letters, put numbers at the end;\nuse _ to separate words — snake_case or camelCase;\nyou can use . as a separator, but better to avoid it;\nuse names that make sense.\n\n\nreaction_time &lt;- 412      # good\nrt2 &lt;- 412                # fine\n\n\n\n\n\n\n\nWarning\n\n\n\nDo not name a variable after a function you use — mean, c, data, df, T, F. T &lt;- FALSE is legal and will quietly break things later.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#everything-is-an-object",
+    "href": "sessions/01-r-basics/index.html#everything-is-an-object",
+    "title": "1 · Basics of R",
+    "section": "Everything is an object",
+    "text": "Everything is an object\n\n“To understand computations in R, two slogans are helpful: Everything that exists is an object. Everything that happens is a function call.” — John Chambers\n\nA name does not contain a value; it is bound to one. y &lt;- 2 * sqrt(177) + 3 does not create an object called y — it binds the label y to a stored number.\n\ny1 &lt;- y &lt;- 2 * sqrt(177) + 3\ny; y1\n\n[1] 29.60827\n\n\n[1] 29.60827\n\n\nThat is two names pointing at one object, not two objects.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#the-help-system",
+    "href": "sessions/01-r-basics/index.html#the-help-system",
+    "title": "1 · Basics of R",
+    "section": "The help system",
+    "text": "The help system\n\n?mean                  # help for a function you can name\nhelp(mean)             # the same thing\n??regression           # search for a topic\napropos(\"mean\")        # functions whose name contains \"mean\"\nexample(seq)           # run the examples from the help page\n\nHelp pages have several sections. At this stage you need Arguments (what you can pass in) and Examples (at the bottom, ready to copy).",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#packages",
+    "href": "sessions/01-r-basics/index.html#packages",
+    "title": "1 · Basics of R",
+    "section": "Packages",
+    "text": "Packages\n\ninstall.packages(\"psych\", dependencies = TRUE)   # once per computer\nlibrary(psych)                                   # once per session\ninstalled.packages()                             # what is installed\npackageVersion(\"psych\")\ndetach(package:psych)                            # unload it\n\n\n\n\n\n\n\nWarning\n\n\n\nDo not use remove.packages() to unload a package — that deletes it. Use detach().\n\n\nLoading a package puts its functions on the search path:\n\nsearch()\n\n[1] \".GlobalEnv\"        \"package:stats\"     \"package:graphics\" \n[4] \"package:grDevices\" \"package:utils\"     \"package:datasets\" \n[7] \"package:methods\"   \"Autoloads\"         \"package:base\"     \n\n\nEnvironments, in the lecture’s phrase, are “bags of names”. The Global Environment — your workspace — is the first one. When two packages define the same function name, the one loaded later masks the earlier one, and R tells you so. pkg::fun() sidesteps the question entirely.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#the-workspace",
+    "href": "sessions/01-r-basics/index.html#the-workspace",
+    "title": "1 · Basics of R",
+    "section": "The workspace",
+    "text": "The workspace\n\na &lt;- 10; b &lt;- 1:10\nls()          # what is here\n\n[1] \"a\"             \"b\"             \"reaction_time\" \"rt2\"          \n[5] \"x\"             \"y\"             \"y1\"           \n\nls.str()      # ... and what each thing is\n\na :  num 10\nb :  int [1:10] 1 2 3 4 5 6 7 8 9 10\nreaction_time :  num 412\nrt2 :  num 412\nx :  int [1:10] 1 2 3 4 5 6 7 8 9 10\ny :  num 29.6\ny1 :  num 29.6\n\n\n\nrm(a)         # remove one object\nls()\n\n[1] \"b\"             \"reaction_time\" \"rt2\"           \"x\"            \n[5] \"y\"             \"y1\"           \n\nrm(list = ls())   # remove EVERYTHING\nls()\n\ncharacter(0)\n\n\nrm(list = ls()) opens almost every script in this course. Now you know it just deleted your work — and that you should not put it in a script you hand to someone else.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#working-directories",
+    "href": "sessions/01-r-basics/index.html#working-directories",
+    "title": "1 · Basics of R",
+    "section": "Working directories",
+    "text": "Working directories\nR always has one current working directory, and relative paths are interpreted from it.\n\ngetwd()          # where am I\nlist.files()     # what is here\nlist.files(\"data\")\n\nThe lecture sets this with setwd(\"C:/Somewhere/DirectoryName\"). Note that forward slashes work on every system, and a single backslash does not.\nIn this course you will not need setwd() at all. Every practical folder contains an .Rproj file; opening it sets the working directory to that folder. That is better than setwd() because the path is not written into the script, so the same script works on your computer and on mine.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#reading-data",
+    "href": "sessions/01-r-basics/index.html#reading-data",
+    "title": "1 · Basics of R",
+    "section": "Reading data",
+    "text": "Reading data\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\nThe lecture lists the main readers:\n\n\n\n\n\n\n\nFunction\nFor\n\n\n\n\nread.table(file, header = TRUE, sep = \"\\t\")\ngeneral text files\n\n\nread.csv(file)\ncomma-separated, decimal point\n\n\nread.csv2(file)\nsemicolon-separated, decimal comma — the common European export\n\n\nreadxl::read_excel(file)\nExcel\n\n\ndata(name, package = )\na dataset that ships with a package\n\n\n\nWe use read.csv() because these files are comma-separated with decimal points. If you ever open one in Excel on an Italian system and save it, you will need read.csv2() instead — which is a good reason not to open it in Excel.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#str-is-your-best-friend",
+    "href": "sessions/01-r-basics/index.html#str-is-your-best-friend",
+    "title": "1 · Basics of R",
+    "section": "str() is your best friend",
+    "text": "str() is your best friend\nThe lecture says it twice, so it is worth repeating: learn str(). It tells you what any object actually is.\n\nstr(memclinic)\n\n'data.frame':   180 obs. of  10 variables:\n $ id            : chr  \"P059\" \"P102\" \"P019\" \"P001\" ...\n $ group         : chr  \"HC\" \"MCI\" \"HC\" \"HC\" ...\n $ age           : int  71 66 64 74 58 61 76 71 57 73 ...\n $ sex           : chr  \"M\" \"M\" \"F\" \"F\" ...\n $ educ_years    : int  12 12 16 12 12 5 11 13 13 13 ...\n $ moca          : int  30 24 28 28 24 28 20 18 20 19 ...\n $ hippo_vol_mm3 : int  3801 3546 4411 3871 3570 3507 2971 3190 3408 2977 ...\n $ stroop_cost_ms: int  64 129 42 56 123 158 174 154 88 184 ...\n $ rt_mean       : int  387 403 338 360 404 353 492 484 412 446 ...\n $ csf_ptau      : num  14.8 38.2 19.5 16.1 21.4 15.1 71.5 36.1 17.7 33.1 ...\n\n\n180 people assessed at a memory clinic — healthy controls, mild cognitive impairment, and early Alzheimer’s disease — with MRI and cognitive measures. The codebook explains every column.\n\nhead(memclinic, 3)\n\n\n  \n\n\ndim(memclinic)\n\n[1] 180  10\n\nsummary(memclinic$moca)\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n  16.00   20.00   25.00   24.25   28.00   30.00 \n\n\nWhat a data frame is made of is the subject of practical 3. For now it is a table you can look at.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#exercises",
+    "href": "sessions/01-r-basics/index.html#exercises",
+    "title": "1 · Basics of R",
+    "section": "Exercises",
+    "text": "Exercises\n\n\n\n\n\n\nNote\n\n\n\nFill in each ___, and run the lines one at a time with Ctrl+Enter.\n\n\n\nExercise 1 — the calculator, and its limits\n\n\n# A reaction time of 412 ms, expressed in seconds\n412 / ___\n\n# Two ways of getting the same number\n0.1 + 0.2\n0.3\n\n# Are they equal?\n0.1 + 0.2 == ___\nprint(0.1 + 0.2, digits = 22)\ndplyr::near(0.1 + 0.2, ___)\n\n\n\n\nExercise 2 — assignment, and what it leaves behind\n\n\nrm(list = ls())\n\n# Store a participant's age, then print it in one line\n(age &lt;- ___)\n\n# Which of these creates a variable? Check with ls() after each.\nmean(x = 1:20)\nls()\n\nmean(x &lt;- 1:20)\n___()\n\n\n\n\nExercise 3 — find your way around the help\nUse the help system to answer these without guessing.\n\n\n?round\n# What is the second argument of round() called?\nround(3.14159, digits = ___)\n\n?seq\n# Produce the numbers 0, 5, 10, ..., 100 using the `by` argument\nseq(from = 0, to = ___, by = ___)\n\n# Produce exactly 5 evenly spaced numbers between 0 and 1\nseq(from = 0, to = 1, length.out = ___)\n\n\n\n\nExercise 4 — the workspace and the data\n\n\nrm(list = ls())\n\nmemclinic &lt;- read.csv(\"data/___.csv\")\n\nstr(memclinic)\ndim(memclinic)\nnames(memclinic)\nhead(memclinic, ___)\n\nls()                     # what is in the workspace now?\nsummary(memclinic$___)   # summarise the MoCA scores",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#what-to-take-away",
+    "href": "sessions/01-r-basics/index.html#what-to-take-away",
+    "title": "1 · Basics of R",
+    "section": "What to take away",
+    "text": "What to take away\n\n&lt;- makes a variable, = names an argument. They are not interchangeable.\nNever compare decimals with ==.\nls() shows your workspace, rm(list = ls()) empties it.\nOpen the .Rproj; never write setwd() into a script.\nWhen anything surprises you, run str() on it.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#going-further",
+    "href": "sessions/01-r-basics/index.html#going-further",
+    "title": "1 · Basics of R",
+    "section": "Going further",
+    "text": "Going further\nThe appendix covers names and memory, environments and masking, attach()/detach(), saving and loading objects, and floating point in more detail.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html",
+    "href": "sessions/03-lists-dataframes-functions/index.html",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "",
+    "text": "Note⬇ Download this practical\n\n\n\nA zip containing the R script, the data, and an .Rproj file. Unzip it somewhere you can find again, then double-click the .Rproj.\nOptional extra practice alongside Introduction to R — Part 3. It does not replace the lecture, and nothing here is assessed.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#what-you-will-be-able-to-do",
+    "href": "sessions/03-lists-dataframes-functions/index.html#what-you-will-be-able-to-do",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "What you will be able to do",
+    "text": "What you will be able to do\n\nbuild a list, and pick things out of it with [, [[ and $;\nexplain why a data frame is a list, and what follows from that;\nread the output of str() on a fitted model;\nwrite if, ifelse() and for, and say when you do not need a loop;\nwrite a function, with arguments and a return value.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#before-you-start",
+    "href": "sessions/03-lists-dataframes-functions/index.html#before-you-start",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Before you start",
+    "text": "Before you start\n\n\n\n\n\n\nImportantOpen the .Rproj first, and run one line at a time\n\n\n\nDouble-click the .Rproj in this folder, then use Ctrl+Enter (Cmd+Enter on a Mac). Do not press Source while a ___ blank remains.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#lists",
+    "href": "sessions/03-lists-dataframes-functions/index.html#lists",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Lists",
+    "text": "Lists\nA list is a generic vector: a collection of components that can be objects of different types, and of different lengths.\n\n(lis1 &lt;- list(1:5, c(\"a\", \"b\"), c(TRUE, FALSE, TRUE), 2.3))\n\n[[1]]\n[1] 1 2 3 4 5\n\n[[2]]\n[1] \"a\" \"b\"\n\n[[3]]\n[1]  TRUE FALSE  TRUE\n\n[[4]]\n[1] 2.3\n\n\n\nstr(lis1)\n\nList of 4\n $ : int [1:5] 1 2 3 4 5\n $ : chr [1:2] \"a\" \"b\"\n $ : logi [1:3] TRUE FALSE TRUE\n $ : num 2.3\n\ntypeof(lis1)\n\n[1] \"list\"\n\nis.list(lis1)\n\n[1] TRUE\n\n\nComponents are usually named:\n\npatient &lt;- list(id      = \"P042\",\n                age     = 71,\n                group   = \"MCI\",\n                scores  = c(moca = 24, stroop = 118))\nstr(patient)\n\nList of 4\n $ id    : chr \"P042\"\n $ age   : num 71\n $ group : chr \"MCI\"\n $ scores: Named num [1:2] 24 118\n  ..- attr(*, \"names\")= chr [1:2] \"moca\" \"stroop\"\n\n\nA list can contain a list, which makes it a recursive object — and is how every complicated thing in R is built.\n\n\n\n\n\n\nWarningBeware the relation between c() and lists\n\n\n\n\nlis2 &lt;- list(list(1, \"a\"), c(TRUE, FALSE))    # a list of 2\nlis3 &lt;- c(list(1, \"a\"), c(TRUE, FALSE))       # a list of 4\n\nlength(lis2); length(lis3)\n\n[1] 2\n\n\n[1] 4\n\n\nlist() nests. c() flattens one level. They look almost identical and do different things.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#subsetting-a-list",
+    "href": "sessions/03-lists-dataframes-functions/index.html#subsetting-a-list",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Subsetting a list — [, [[, $",
+    "text": "Subsetting a list — [, [[, $\nThis is the single most confusing thing about lists, and it is worth ten minutes now to save an hour later.\n\npatient[\"age\"]      # SINGLE bracket: a LIST containing age\n\n$age\n[1] 71\n\npatient[[\"age\"]]    # DOUBLE bracket: the value itself\n\n[1] 71\n\npatient$age         # the same as [[ ]], for a named component\n\n[1] 71\n\n\n\nclass(patient[\"age\"])\n\n[1] \"list\"\n\nclass(patient[[\"age\"]])\n\n[1] \"numeric\"\n\n\n[ keeps the container, [[ opens it. The usual image: a list is a train of carriages, [ gives you a shorter train, [[ gives you what is inside one carriage.\n\npatient[c(\"id\", \"group\")]    # several components: still a list\n\n$id\n[1] \"P042\"\n\n$group\n[1] \"MCI\"\n\npatient[-1]                  # drop the first component\n\n$age\n[1] 71\n\n$group\n[1] \"MCI\"\n\n$scores\n  moca stroop \n    24    118 \n\npatient[[\"scores\"]][\"moca\"]  # into a component, then inside it\n\nmoca \n  24 \n\npatient$scores[\"moca\"]       # the same\n\nmoca \n  24 \n\n\nunlist() flattens the whole thing to a vector — note the coercion:\n\nunlist(patient)\n\n           id           age         group   scores.moca scores.stroop \n       \"P042\"          \"71\"         \"MCI\"          \"24\"         \"118\"",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#data-frames-are-lists",
+    "href": "sessions/03-lists-dataframes-functions/index.html#data-frames-are-lists",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Data frames are lists",
+    "text": "Data frames are lists\n\nMatrices are built on top of vectors with a dim attribute. Factors are built on top of vectors with class and levels. Dataframes are built on top of lists.\n\nA data frame is a named list of vectors, all of the same length, with three attributes: names, class, and row.names.\n\nage   &lt;- c(72, 68, 81, 74, 69)\nsex   &lt;- c(\"M\", \"F\", \"F\", \"M\", \"F\")\ngroup &lt;- c(\"HC\", \"MCI\", \"AD\", \"HC\", \"MCI\")\n\n(df1 &lt;- data.frame(age = age, sex = sex, group = group))\n\n\n  \n\n\n\n\nstr(df1)\n\n'data.frame':   5 obs. of  3 variables:\n $ age  : num  72 68 81 74 69\n $ sex  : chr  \"M\" \"F\" \"F\" \"M\" ...\n $ group: chr  \"HC\" \"MCI\" \"AD\" \"HC\" ...\n\nattributes(df1)\n\n$names\n[1] \"age\"   \"sex\"   \"group\"\n\n$class\n[1] \"data.frame\"\n\n$row.names\n[1] 1 2 3 4 5\n\ntypeof(df1)      # a list!\n\n[1] \"list\"\n\nclass(df1)       # ... labelled data.frame\n\n[1] \"data.frame\"\n\n\nWhich means all the list subsetting you just learned applies:\n\nlength(df1)      # the number of COLUMNS\n\n[1] 3\n\ndf1[1]           # a data frame with one column\n\n\n  \n\n\ndf1[[1]]         # the column itself, as a vector\n\n[1] 72 68 81 74 69\n\ndf1$age          # the same\n\n[1] 72 68 81 74 69\n\n\nBut a data frame also has the properties of a matrix, so [row, column] works too:\n\ndim(df1); nrow(df1); ncol(df1)\n\n[1] 5 3\n\n\n[1] 5\n\n\n[1] 3\n\ncolnames(df1)\n\n[1] \"age\"   \"sex\"   \"group\"\n\ndf1[2, ]          # second row\n\n\n  \n\n\ndf1[, \"age\"]      # the age column\n\n[1] 72 68 81 74 69\n\ndf1[2, \"age\"]     # one cell\n\n[1] 68\n\n\nThat double nature — list and matrix at once — is what makes a data frame the right object for a dataset.\n\n\n\n\n\n\nWarningstringsAsFactors\n\n\n\n\nis.factor(df1$sex)\n\n[1] FALSE\n\n\nSince R 4.0.0 text columns stay as text. Older code and older textbooks assume the opposite. Convert explicitly when you need a factor.\n\n\n\nsummary() behaves differently on factors\n\nsummary(df1)\n\n      age           sex               group          \n Min.   :68.0   Length:5           Length:5          \n 1st Qu.:69.0   Class :character   Class :character  \n Median :72.0   Mode  :character   Mode  :character  \n Mean   :72.8                                        \n 3rd Qu.:74.0                                        \n Max.   :81.0                                        \n\n\nsex and group report Length / Class / Mode, which tells you nothing. Turn them into factors and the same call counts them:\n\ndf1_F &lt;- as.data.frame(unclass(df1), stringsAsFactors = TRUE)\nsummary(df1_F)\n\n      age       sex   group  \n Min.   :68.0   F:3   AD :1  \n 1st Qu.:69.0   M:2   HC :2  \n Median :72.0         MCI:2  \n Mean   :72.8                \n 3rd Qu.:74.0                \n Max.   :81.0                \n\n\n\n\nAdding columns and combining frames\n\ndf1$moca &lt;- c(29, 24, 17, 28, 25)\ndf1$age_z &lt;- with(df1, scale(age))    # with() saves repeating df1$\nstr(df1)\n\n'data.frame':   5 obs. of  5 variables:\n $ age  : num  72 68 81 74 69\n $ sex  : chr  \"M\" \"F\" \"F\" \"M\" ...\n $ group: chr  \"HC\" \"MCI\" \"AD\" \"HC\" ...\n $ moca : num  29 24 17 28 25\n $ age_z: num [1:5, 1] -0.155 -0.929 1.587 0.232 -0.735\n  ..- attr(*, \"scaled:center\")= num 72.8\n  ..- attr(*, \"scaled:scale\")= num 5.17\n\n\n\nextra &lt;- data.frame(age = 77, sex = \"F\", group = \"AD\", moca = 19, age_z = NA)\nrbind(df1, extra)                     # add rows\n\n\n  \n\n\nids &lt;- data.frame(row = 1:5, site = c(\"PD\", \"PD\", \"VR\", \"PD\", \"VR\"))\nhead(cbind(df1, site = ids$site), 3)  # add columns\n\n\n  \n\n\n\nmerge() joins two frames on a shared key, and is covered properly in practical 4.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#tibbles",
+    "href": "sessions/03-lists-dataframes-functions/index.html#tibbles",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Tibbles",
+    "text": "Tibbles\nA tibble is a modern data frame from the tidyverse, which drops some of the older idiosyncrasies and prints more helpfully — it borrows the type information from str() and puts it in the printout.\n\n(tib0 &lt;- tibble::tibble(x    = 1:3,\n                        y    = 1,\n                        z    = x^2 + y,\n                        name = letters[1:3]))\n\n\n  \n\n\n\n\nclass(tib0)\n\n[1] \"tbl_df\"     \"tbl\"        \"data.frame\"\n\ntibble::is_tibble(tib0)\n\n[1] TRUE\n\n\nNote y = 1 was recycled, and z could be defined using x and y in the same call — neither works in data.frame(). A tibble is still a data frame: [, [[ and $ all behave as you expect.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#control-flow",
+    "href": "sessions/03-lists-dataframes-functions/index.html#control-flow",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Control flow",
+    "text": "Control flow\n\nChoices\n\nscore &lt;- 24\nif (score &lt; 26) {\n  print(\"below the screening cut-off\")\n} else {\n  print(\"within normal limits\")\n}\n\n[1] \"below the screening cut-off\"\n\n\nif() takes one condition. For a whole vector, use the vectorised ifelse():\n\nx &lt;- 1:8\nifelse(x %% 2 == 0, \"even\", \"odd\")\n\n[1] \"odd\"  \"even\" \"odd\"  \"even\" \"odd\"  \"even\" \"odd\"  \"even\"\n\n\n\nmoca &lt;- c(29, 24, 18, 27)\ndplyr::case_when(\n  moca &gt;= 26 ~ \"normal\",\n  moca &gt;= 20 ~ \"mild\",\n  TRUE       ~ \"moderate-severe\"\n)\n\n[1] \"normal\"          \"mild\"            \"moderate-severe\" \"normal\"         \n\n\ncase_when() replaces nested ifelse(). The conditions are evaluated in the order you write them, and the first match wins, so &gt;= 26 must come before &gt;= 20. The final TRUE is the catch-all.\n\n\nLoops\n\nfor (i in 1:4) print(i)\n\n[1] 1\n[1] 2\n[1] 3\n[1] 4\n\n\n\nfor (g in c(\"HC\", \"MCI\", \"AD\")) {\n  cat(g, \"\\n\")\n}\n\nHC \nMCI \nAD \n\n\nnext skips to the next iteration, break leaves the loop:\n\nfor (i in 1:10) {\n  if (i &lt; 2) next\n  if (i &gt; 6) break\n  cat(i, \"\")\n}\n\n2 3 4 5 6 \n\n\n\nx &lt;- 0\nwhile (x &lt; 4) { x &lt;- x + 1 }\nx\n\n[1] 4\n\nx &lt;- 0\nrepeat { x &lt;- x + 1; if (x == 4) break }\nx\n\n[1] 4\n\n\nwhile tests the condition before each pass, repeat runs until you break out. There is no do-while statement in R.\n\n\n\n\n\n\nWarningPitfalls in loops\n\n\n\n\nPreallocate — growing a vector each pass makes R copy it each time.\nLoops can strip attributes from vectors.\nVectorise rather than nesting loops.\n1:length(x) fails on an empty vector. Use seq_along(x):\n\n\nx &lt;- numeric(0)\n1:length(x)      # counts DOWN from 1 to 0 -- two iterations on nothing\n\n[1] 1 0\n\nseq_along(x)     # empty, as it should be\n\ninteger(0)",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#functions",
+    "href": "sessions/03-lists-dataframes-functions/index.html#functions",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Functions",
+    "text": "Functions\nIn data analysis, functions are how you call statistical methods — and they typically return a list holding both results and details.\n\nttestex &lt;- t.test(1:100, mu = 70)\nclass(ttestex)\n\n[1] \"htest\"\n\nnames(ttestex)\n\n [1] \"statistic\"   \"parameter\"   \"p.value\"     \"conf.int\"    \"estimate\"   \n [6] \"null.value\"  \"stderr\"      \"alternative\" \"method\"      \"data.name\"  \n\n\n\nttestex$p.value\n\n[1] 1.159984e-09\n\nttestex$conf.int\n\n[1] 44.74349 56.25651\nattr(,\"conf.level\")\n[1] 0.95\n\n\nEverything printed in a test result is a component you can pull out by name — which is how you put a number into a report without retyping it.\nThe same is true of a fitted model:\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\nfit &lt;- lm(stroop_cost_ms ~ hippo_vol_mm3, data = memclinic)\n\nclass(fit)\n\n[1] \"lm\"\n\nnames(fit)[1:6]\n\n[1] \"coefficients\"  \"residuals\"     \"effects\"       \"rank\"         \n[5] \"fitted.values\" \"assign\"       \n\nfit$coefficients\n\n  (Intercept) hippo_vol_mm3 \n  339.5534002    -0.0641034 \n\n\nclass() is \"lm\", and that label is the whole reason summary(fit) prints a regression table rather than dumping a list. What that table means is the subject of the Regression 1 lecture.\n\nWriting your own\n\nhypo &lt;- function(a, b) {\n  c = sqrt(a^2 + b^2)\n  return(c)\n}\n\nhypo(3, 4)\n\n[1] 5\n\nhypo(a = 3, b = 4)\n\n[1] 5\n\n\nNotice the assignment discipline: &lt;- binds the function to the name, = names arguments at the call site.\nA function has three parts:\n\nformals(hypo)      # its arguments\n\n$a\n\n\n$b\n\nbody(hypo)         # what it does\n\n{\n    c = sqrt(a^2 + b^2)\n    return(c)\n}\n\n\nArguments can have defaults, and the last expression is returned even without return():\n\nz_score &lt;- function(x, na.rm = TRUE) {\n  (x - mean(x, na.rm = na.rm)) / sd(x, na.rm = na.rm)\n}\n\nround(z_score(c(24, 26, 28, 30, 22)), 2)\n\n[1] -0.63  0.00  0.63  1.26 -1.26\n\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\nBe careful with arguments and their position.\n\nsum(2, 3, 10)\n\n[1] 15\n\nmean(2, 3, 10)\n\n[1] 2\n\nargs(mean)\n\nfunction (x, ...) \nNULL\n\n\nsum() adds everything it is given. mean() takes one vector as its first argument, so mean(2, 3, 10) returns the mean of 2 — and silently ignores the rest. What you meant was mean(c(2, 3, 10)).\n\n\n\nf &lt;- function() { hidden &lt;- 99; hidden }\nf()\n\n[1] 99\n\nexists(\"hidden\")\n\n[1] FALSE\n\n\nWhat happens in the function stays in the function.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#exercises",
+    "href": "sessions/03-lists-dataframes-functions/index.html#exercises",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Exercises",
+    "text": "Exercises\n\nExercise 1 — a list, and the three brackets\n\n\nsession &lt;- list(\n  id        = \"P042\",\n  visit     = ___,\n  scores    = c(moca = 24, stroop = 118, rt = 455),\n  complete  = TRUE\n)\n\nstr(session)\n\nsession[\"scores\"]        # what class is this?\nsession[[\"scores\"]]      # and this?\nclass(session[___])\nclass(session[[___]])\n\nsession$scores[\"moca\"]   # reach inside the component\n\n\n\n\nExercise 2 — a data frame is a list\n\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\ntypeof(memclinic)      # what is it made of?\nclass(memclinic)       # what is it labelled as?\nlength(memclinic)      # rows or columns?\nnrow(memclinic)\n\n# The same column, three ways\nhead(memclinic[[\"moca\"]], 3)\nhead(memclinic$___, 3)\nhead(memclinic[, \"___\"], 3)\n\n# And the container version\nclass(memclinic[\"moca\"])\nclass(memclinic[[\"moca\"]])\n\n\n\n\nExercise 3 — recoding with control flow\n\n\n# A binary flag with the vectorised if\nmemclinic$flag &lt;- ifelse(memclinic$moca &lt; ___, \"positive\", \"negative\")\ntable(memclinic$flag)\n\n# Three categories, first match wins\nmemclinic$severity &lt;- dplyr::case_when(\n  memclinic$moca &gt;= 26 ~ \"___\",\n  memclinic$moca &gt;= 20 ~ \"___\",\n  TRUE                 ~ \"moderate-severe\"\n)\ntable(memclinic$severity)\n\n# Why would putting the &gt;= 20 line first be wrong?\n\n\n\n\nExercise 4 — write a function\nWrite a function that takes a vector of scores and returns how many fall below a cut-off, with the cut-off as an argument that defaults to 26.\n\n\nn_below &lt;- function(x, cutoff = ___) {\n  sum(x &lt; cutoff, na.rm = TRUE)\n}\n\nn_below(memclinic$moca)\nn_below(memclinic$moca, cutoff = ___)\n\nformals(n_below)\n\n# Now break it on purpose: what does this give, and why?\nmean(24, 26, 28)\nmean(c(24, 26, 28))",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#what-to-take-away",
+    "href": "sessions/03-lists-dataframes-functions/index.html#what-to-take-away",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "What to take away",
+    "text": "What to take away\n\n[ keeps the container, [[ and $ open it.\nA data frame is a list of equal-length columns, wearing a class label. length() counts columns; use nrow() for rows.\nif takes one condition; ifelse() and case_when() take a whole vector.\ncase_when() stops at the first match, so order the conditions from specific to general.\nA statistical function returns a list — everything in a printed result can be pulled out by name.\nCheck the argument order of a function before you trust its answer.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#going-further",
+    "href": "sessions/03-lists-dataframes-functions/index.html#going-further",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Going further",
+    "text": "Going further\nThe appendix covers nested lists and purrr::map(), the apply family, seq_along() and loop pitfalls in depth, anonymous functions, pipes, and lexical scoping.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/appendix.html",
+    "href": "sessions/01-r-basics/appendix.html",
+    "title": "1 · Appendix — what R is actually doing",
+    "section": "",
+    "text": "Note\n\n\n\nNothing here is examinable. It is here because the answer to “but where does that number actually come from?” is worth having written down.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Appendix — what R is actually doing"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/appendix.html#names-are-not-objects",
+    "href": "sessions/01-r-basics/appendix.html#names-are-not-objects",
+    "title": "1 · Appendix — what R is actually doing",
+    "section": "Names are not objects",
+    "text": "Names are not objects\nThe lecture slides make a point that sounds abstract and turns out to be practical: a name does not contain a value, it points to one.\n\nlibrary(lobstr)\n\nx &lt;- c(1, 2, 3)\ny &lt;- x\nobj_addr(x); obj_addr(y)     # the SAME address: one object, two labels\n\ny[1] &lt;- 99\nobj_addr(x); obj_addr(y)     # now different: R copied on modify\nx                            # x is untouched\n\nThis is why assigning a data frame to a second name costs nothing until you change one of them, and why R rarely surprises you by altering something you did not mean to alter.\n\n\n\n\n\n\nTipIf lobstr is not installed\n\n\n\ninstall.packages(\"lobstr\"). The chunks above and below are not run when this page is built, so a missing package cannot break anything.\n\n\n\nThe professor’s info() function\nYou will meet this in the lecture script Regression1.R, inside a block marked ### nerd mode on ###. It is reproduced here so that it is recognition rather than confusion when it appears:\n\ninfo &lt;- function(x) {\n  return(list(\n    is_obj      = is.object(x),\n    obj_type    = sloop::otype(x),\n    R_type      = typeof(x),\n    obj_class   = class(x),\n    address_mem = lobstr::obj_addr(x),\n    size        = lobstr::obj_size(x),\n    SEXP_C      = lobstr::sxp(x)))\n}\n\ninfo(c(1, 2, 3))\n\nIt answers, in one call, every question you can ask about what an object is.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Appendix — what R is actually doing"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/appendix.html#typeof-class-and-mode",
+    "href": "sessions/01-r-basics/appendix.html#typeof-class-and-mode",
+    "title": "1 · Appendix — what R is actually doing",
+    "section": "typeof(), class() and mode()",
+    "text": "typeof(), class() and mode()\nThree functions that look like they should agree, and do not.\n\ntypeof(1L);  class(1L)\n\n[1] \"integer\"\n\n\n[1] \"integer\"\n\ntypeof(1);   class(1)\n\n[1] \"double\"\n\n\n[1] \"numeric\"\n\ntypeof(\"a\"); class(\"a\")\n\n[1] \"character\"\n\n\n[1] \"character\"\n\ntypeof(TRUE)\n\n[1] \"logical\"\n\n\ntypeof() is how the value is stored in memory. class() is what R’s statistical machinery treats it as, which is the one that decides how summary() or plot() will behave. A number typed without an L is a double, not an integer — class(1) is \"numeric\".\n\nm &lt;- lm(mpg ~ wt, data = mtcars)\nclass(m)\n\n[1] \"lm\"\n\ntypeof(m)\n\n[1] \"list\"\n\n\nA fitted model is a list that R has labelled \"lm\", and that label is the entire reason summary(m) prints a regression table rather than a list dump.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Appendix — what R is actually doing"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/appendix.html#floating-point-properly",
+    "href": "sessions/01-r-basics/appendix.html#floating-point-properly",
+    "title": "1 · Appendix — what R is actually doing",
+    "section": "Floating point, properly",
+    "text": "Floating point, properly\nPractical 1 showed that sqrt(2)^2 == 2 is FALSE. Here is the machinery.\n\nprint(sqrt(2)^2, digits = 22)\n\n[1] 2.000000000000000444089\n\n0.1 + 0.2 == 0.3\n\n[1] FALSE\n\nprint(0.1 + 0.2 - 0.3, digits = 22)\n\n[1] 5.551115123125782702118e-17\n\n.Machine$double.eps\n\n[1] 2.220446e-16\n\n\nComputers store numbers in binary with finite precision, and 0.1 has no exact binary representation any more than 1/3 has an exact decimal one. Three ways to compare safely:\n\nall.equal(0.1 + 0.2, 0.3)          # TRUE, with a tolerance\n\n[1] TRUE\n\nisTRUE(all.equal(0.1 + 0.2, 0.3))  # use this in an if()\n\n[1] TRUE\n\ndplyr::near(0.1 + 0.2, 0.3)        # the tidyverse version\n\n[1] TRUE\n\nidentical(0.1 + 0.2, 0.3)          # exact: FALSE\n\n[1] FALSE",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Appendix — what R is actually doing"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/appendix.html#integer-division-and-remainder",
+    "href": "sessions/01-r-basics/appendix.html#integer-division-and-remainder",
+    "title": "1 · Appendix — what R is actually doing",
+    "section": "Integer division and remainder",
+    "text": "Integer division and remainder\n\n17 %/% 5     # how many whole 5s\n\n[1] 3\n\n17 %% 5      # what is left over\n\n[1] 2\n\n\nOne genuine use — binning ages into decades:\n\nages &lt;- c(67, 72, 81, 79, 64)\n(ages %/% 10) * 10\n\n[1] 60 70 80 70 60",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Appendix — what R is actually doing"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/appendix.html#workspaces-files-and-what-rmlist-ls-does",
+    "href": "sessions/01-r-basics/appendix.html#workspaces-files-and-what-rmlist-ls-does",
+    "title": "1 · Appendix — what R is actually doing",
+    "section": "Workspaces, files, and what rm(list = ls()) does",
+    "text": "Workspaces, files, and what rm(list = ls()) does\n\ngetwd()              # where am I\nlist.files()         # what is here\nlist.files(\"data\")\n\nx &lt;- 1; y &lt;- 2\nls()                 # what is in the workspace\nrm(x)                # remove one thing\nrm(list = ls())      # remove EVERYTHING\n\nEvery lecture script in this course opens with rm(list = ls()). It is reasonable at the top of a script you are running from the beginning. It is rude in a script you hand to someone else, because it deletes their work without asking.\n\nSaving objects\n\nsaveRDS(patients, \"patients.rds\")   # one object\npatients &lt;- readRDS(\"patients.rds\")\n\nsave(x, y, file = \"two-things.RData\")   # several, with their names\nload(\"two-things.RData\")\n\nsaveRDS()/readRDS() stores one object and you choose the name when you read it back; save()/load() stores names as well, and load() drops them into your workspace whether or not something is already called that.\nLast year’s course folder contained files named R3-group1 and R4-MLR with no extension — they were RDS files, and nothing on the outside said so. The rule in these materials is that data is a .csv with its extension visible.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Appendix — what R is actually doing"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/appendix.html#environments-and-masking",
+    "href": "sessions/01-r-basics/appendix.html#environments-and-masking",
+    "title": "1 · Appendix — what R is actually doing",
+    "section": "Environments and masking",
+    "text": "Environments and masking\nThe professor describes environments as “bags of names”. When you load a package, its bag goes on top of the pile:\n\nsearch()\n\n[1] \".GlobalEnv\"        \"package:stats\"     \"package:graphics\" \n[4] \"package:grDevices\" \"package:utils\"     \"package:datasets\" \n[7] \"package:methods\"   \"Autoloads\"         \"package:base\"     \n\n\nIf two packages define the same function, the one loaded last wins, and R tells you so with a masked from message. MASS::select and dplyr::select are the classic collision in this course.\n\nlibrary(MASS)\nlibrary(dplyr)       # \"The following object is masked from 'package:MASS': select\"\nselect(mtcars, mpg)  # which select is this?\ndplyr::select(mtcars, mpg)   # no ambiguity\n\nThe pkg::fun() form is the cure, and it is why these materials write psych::describe() and car::ncvTest() rather than loading those packages.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Appendix — what R is actually doing"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/appendix.html#attach-and-detach",
+    "href": "sessions/01-r-basics/appendix.html#attach-and-detach",
+    "title": "1 · Appendix — what R is actually doing",
+    "section": "attach() and detach()",
+    "text": "attach() and detach()\nattach() puts a data frame’s columns on the search path so you can name them directly. The slides teach it, so here it is:\n\nattach(mtcars)\nmpg           # works, without mtcars$\nls()          # but mpg is NOT in your workspace\nsearch()      # mtcars is on the path instead\ndetach(mtcars)\nmpg           # now an error\n\nThe professor’s warning is the important part: always remember to detach() when you are done. The failure mode is attaching the same data frame twice, or attaching one and then modifying the original — the attached copy does not change with it, and you end up analysing data you think you have updated.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Appendix — what R is actually doing"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/appendix.html#writing-your-own-function",
+    "href": "sessions/01-r-basics/appendix.html#writing-your-own-function",
+    "title": "1 · Appendix — what R is actually doing",
+    "section": "Writing your own function",
+    "text": "Writing your own function\n\nhypo &lt;- function(a, b) {\n  c = sqrt(a^2 + b^2)\n  return(c)\n}\n\nhypo(3, 4)\n\n[1] 5\n\nhypo(a = 3, b = 4)\n\n[1] 5\n\n\nNote the assignment discipline: &lt;- binds the function to the name hypo, and = names arguments at the call site. Three parts make up any function:\n\nformals(hypo)\n\n$a\n\n\n$b\n\nbody(hypo)\n\n{\n    c = sqrt(a^2 + b^2)\n    return(c)\n}\n\n\nArguments can have defaults:\n\nz_score &lt;- function(x, na.rm = TRUE) {\n  (x - mean(x, na.rm = na.rm)) / sd(x, na.rm = na.rm)\n}\nround(z_score(c(10, 12, 14, 16, 100)), 2)\n\n[1] -0.52 -0.47 -0.42 -0.37  1.79\n\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\nWrite the obvious version of mean() and watch it fail quietly:\n\nmy_mean &lt;- function(x) sum(x) / length(x)\n\nmy_mean(c(1, 2, 3))\n\n[1] 2\n\nmy_mean(c(1, NA, 3))    # NA, and it will not tell you why\n\n[1] NA\n\n\nThe same lesson as practical 3, where mean(2, 3, 10) returns 2: the function did exactly what you wrote, which was not what you meant.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Appendix — what R is actually doing"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/appendix.html#seq_along-not-1lengthx",
+    "href": "sessions/01-r-basics/appendix.html#seq_along-not-1lengthx",
+    "title": "1 · Appendix — what R is actually doing",
+    "section": "seq_along(), not 1:length(x)",
+    "text": "seq_along(), not 1:length(x)\n\nx &lt;- numeric(0)      # an empty vector\n1:length(x)          # counts DOWN from 1 to 0\n\n[1] 1 0\n\nseq_along(x)         # empty, as it should be\n\ninteger(0)\n\n\nA loop written for (i in 1:length(x)) runs twice on an empty vector, indexing positions 1 and 0. seq_along() runs zero times. This is why the lecture slides insist on it.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Appendix — what R is actually doing"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/appendix.html",
+    "href": "sessions/03-lists-dataframes-functions/appendix.html",
+    "title": "3 · Appendix — doing things repeatedly",
+    "section": "",
+    "text": "Note\n\n\n\nNothing here is examinable. It is here because the answer to “but where does that number actually come from?” is worth having written down.\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\nmemclinic$group &lt;- factor(memclinic$group, levels = c(\"HC\", \"MCI\", \"AD\"))",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Appendix — doing things repeatedly"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/appendix.html#lists-are-not-vectorised",
+    "href": "sessions/03-lists-dataframes-functions/appendix.html#lists-are-not-vectorised",
+    "title": "3 · Appendix — doing things repeatedly",
+    "section": "Lists are not vectorised",
+    "text": "Lists are not vectorised\n\nxlis &lt;- list(1, 2, 3)\nxlis^2\n\nError in `xlis^2`:\n! non-numeric argument to binary operator\n\n\nArithmetic works elementwise on a vector; a list is a generic container, so there is nothing to apply the operation to. The fix is to map a function over it:\n\npurrr::map(xlis, function(x) x^2)\n\n\nlapply(xlis, function(x) x^2)\n\n[[1]]\n[1] 1\n\n[[2]]\n[1] 4\n\n[[3]]\n[1] 9",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Appendix — doing things repeatedly"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/appendix.html#the-apply-family",
+    "href": "sessions/03-lists-dataframes-functions/appendix.html#the-apply-family",
+    "title": "3 · Appendix — doing things repeatedly",
+    "section": "The apply family",
+    "text": "The apply family\n\nvars &lt;- c(\"age\", \"moca\", \"hippo_vol_mm3\")\n\nsapply(memclinic[, vars], mean)     # simplifies to a vector\n\n          age          moca hippo_vol_mm3 \n     69.87222      24.25000    3484.96111 \n\nsapply(memclinic[, vars], range)    # ... or a matrix\n\n     age moca hippo_vol_mm3\n[1,]  50   16          2634\n[2,]  91   30          4571\n\nstr(lapply(memclinic[, vars], mean))   # lapply always returns a list\n\nList of 3\n $ age          : num 69.9\n $ moca         : num 24.2\n $ hippo_vol_mm3: num 3485\n\n\nsapply() guesses at the output shape, which is convenient interactively and risky in a script. vapply() makes you state it, and then checks:\n\nvapply(memclinic[, vars], mean, numeric(1))\n\n          age          moca hippo_vol_mm3 \n     69.87222      24.25000    3484.96111 \n\n\n\nnames(Filter(is.numeric, memclinic))\n\n[1] \"age\"            \"educ_years\"     \"moca\"           \"hippo_vol_mm3\" \n[5] \"stroop_cost_ms\" \"rt_mean\"        \"csf_ptau\"      \n\npieces &lt;- lapply(levels(memclinic$group), function(g) {\n  d &lt;- memclinic[memclinic$group == g, ]\n  data.frame(group = g, n = nrow(d), mean_moca = round(mean(d$moca), 1))\n})\ndo.call(rbind, pieces)\n\n\n  \n\n\n\ndo.call(rbind, ...) stacks a list of data frames into one, and is the idiom you will see in simulation code.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Appendix — doing things repeatedly"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/appendix.html#preallocation-and-why-it-matters",
+    "href": "sessions/03-lists-dataframes-functions/appendix.html#preallocation-and-why-it-matters",
+    "title": "3 · Appendix — doing things repeatedly",
+    "section": "Preallocation, and why it matters",
+    "text": "Preallocation, and why it matters\n\ngroups &lt;- levels(memclinic$group)\n\nout &lt;- numeric(length(groups))          # room reserved up front\nfor (i in seq_along(groups)) {\n  out[i] &lt;- mean(memclinic$moca[memclinic$group == groups[i]])\n}\nnames(out) &lt;- groups\nround(out, 1)\n\n  HC  MCI   AD \n28.4 25.2 19.2 \n\n\nGrowing out with c(out, value) instead would make R copy the whole vector on every pass. For three groups it makes no difference; for a simulation with 10 000 iterations it is the difference between seconds and minutes.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Appendix — doing things repeatedly"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/appendix.html#anonymous-functions-and-functions-in-lists",
+    "href": "sessions/03-lists-dataframes-functions/appendix.html#anonymous-functions-and-functions-in-lists",
+    "title": "3 · Appendix — doing things repeatedly",
+    "section": "Anonymous functions and functions in lists",
+    "text": "Anonymous functions and functions in lists\n\nsapply(memclinic[, c(\"age\", \"moca\")], function(x) max(x) - min(x))\n\n age moca \n  41   14 \n\n# R 4.1 shorthand\nsapply(memclinic[, c(\"age\", \"moca\")], \\(x) max(x) - min(x))\n\n age moca \n  41   14 \n\n\n\nfuns &lt;- list(mean = mean, median = median, sd = sd)\nsapply(funs, function(f) round(f(memclinic$moca), 2))\n\n  mean median     sd \n 24.25  25.00   4.16 \n\n\nFunctions are objects like anything else, so they can live in a list and be passed around.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Appendix — doing things repeatedly"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/appendix.html#composing-functions-and-pipes",
+    "href": "sessions/03-lists-dataframes-functions/appendix.html#composing-functions-and-pipes",
+    "title": "3 · Appendix — doing things repeatedly",
+    "section": "Composing functions, and pipes",
+    "text": "Composing functions, and pipes\n\nx &lt;- c(4, 9, 16)\n\nstep1 &lt;- log(x); exp(step1)       # step by step\n\n[1]  4  9 16\n\nexp(log(x))                       # nested, read inside out\n\n[1]  4  9 16\n\nx |&gt; log() |&gt; exp()               # native pipe, read left to right\n\n[1]  4  9 16\n\n\nThe lecture teaches %&gt;% from magrittr, which is what the tidyverse uses and what appears in WinterBreakExercises.R:\n\nlibrary(magrittr)\nx %&gt;% log %&gt;% exp\n\nFor straightforward use the two behave the same. |&gt; is built into R and needs no package.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Appendix — doing things repeatedly"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/appendix.html#lexical-scoping",
+    "href": "sessions/03-lists-dataframes-functions/appendix.html#lexical-scoping",
+    "title": "3 · Appendix — doing things repeatedly",
+    "section": "Lexical scoping",
+    "text": "Lexical scoping\n\nz &lt;- 10\nf &lt;- function() { z &lt;- 99; z }\n\nf()    # the local z\n\n[1] 99\n\nz      # the global one, untouched\n\n[1] 10\n\n\nName masking: a name defined inside a function hides one outside it. Dynamic lookup: R looks inside the function first, then outward. In the lecture’s phrasing — what happens in the function stays in the function, unless you super-assign with &lt;&lt;-, which you should almost never do.\n\ng &lt;- function(a, b) a * 2\ng(5)      # no error, even though b was never supplied\n\n[1] 10\n\n\nThat is lazy evaluation: arguments are only evaluated if they are actually used. b was never touched, so its absence never came up.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Appendix — doing things repeatedly"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/appendix.html#nested-lists",
+    "href": "sessions/03-lists-dataframes-functions/appendix.html#nested-lists",
+    "title": "3 · Appendix — doing things repeatedly",
+    "section": "Nested lists",
+    "text": "Nested lists\n\nstudy &lt;- list(\n  site_PD = list(n = 120, lead = \"Padova\"),\n  site_VR = list(n = 60,  lead = \"Verona\")\n)\n\nstudy$site_PD$n\n\n[1] 120\n\nstudy[[\"site_VR\"]][[\"lead\"]]\n\n[1] \"Verona\"\n\nsapply(study, function(s) s$n)\n\nsite_PD site_VR \n    120      60 \n\nsum(sapply(study, function(s) s$n))\n\n[1] 180\n\n\nA fitted model is exactly this shape, several levels deep, which is why str() on one produces so much output — and why names() is the friendlier way in.\n\nfit &lt;- lm(stroop_cost_ms ~ hippo_vol_mm3, data = memclinic)\nnames(summary(fit))\n\n [1] \"call\"          \"terms\"         \"residuals\"     \"coefficients\" \n [5] \"aliased\"       \"sigma\"         \"df\"            \"r.squared\"    \n [9] \"adj.r.squared\" \"fstatistic\"    \"cov.unscaled\" \n\nsummary(fit)$r.squared\n\n[1] 0.5340545\n\nsummary(fit)$coefficients[\"hippo_vol_mm3\", \"Pr(&gt;|t|)\"]\n\n[1] 2.466457e-31\n\n\nPulling a p value out by name like that is how you avoid retyping numbers into a report — and how you avoid the typo that follows.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Appendix — doing things repeatedly"
+    ]
+  }
+]

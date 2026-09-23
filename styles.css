@@ -1,0 +1,19 @@
+/* ---------------------------------------------------------------------------
+   `.solution` collides with a built-in Quarto proof environment, which emits
+   its own italic "Solution." line immediately above our collapsed callout —
+   so a released page said "Solution" twice. Hide the proof title; the callout
+   already carries the heading.
+
+   This is visual only. The marker stays in the HTML, which is what
+   R/check-publish.R counts, so the release gate is unaffected.
+--------------------------------------------------------------------------- */
+.solution > p > .proof-title,
+p > .proof-title {
+  display: none;
+}
+
+/* The footer carries the "this is not the course material" line on every
+   page, so it should read as a quiet note rather than navigation. */
+.nav-footer {
+  font-size: 0.85rem;
+}
