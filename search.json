@@ -671,7 +671,7 @@
     "href": "index.html",
     "title": "Getting started with R",
     "section": "",
-    "text": "ImportantThis is not the course material\n\n\n\nThe course is taught from Prof. Noventa’s lectures and his R scripts, which are on Moodle. Those are what you are assessed on.\nThis site is optional. It exists for one reason: if you have never used R before, the first thing you meet in this course is a script that opens with library() and a model fit on line 1. These four practicals are the part nobody teaches — enough R that those scripts become readable.\nIf you already use R, you can skip all of it.",
+    "text": "ImportantThis is not the course material\n\n\n\nThe course is taught from Prof. Noventa’s lectures and his R scripts, which are on Moodle. Those are what you are assessed on.\nThis site is optional. It exists for one reason: if you have never used R before, it will help you understand the R scripts used in the course.\nIf you already use R, you can skip all of it.",
     "crumbs": [
       "Start here"
     ]
@@ -681,7 +681,7 @@
     "href": "index.html#what-is-here",
     "title": "Getting started with R",
     "section": "What is here",
-    "text": "What is here\nFour practicals. The first three run alongside the Introduction to R lectures, one each, covering the same ground more slowly and with exercises. The fourth covers something the lectures do not: handling and plotting data, which every analysis script in the course quietly assumes you can already do.\n\n\n\n#\nPractical\nAlongside\nWhat it covers\n\n\n\n\n01\nBasics of R\nIntroduction to R, Part 1\ncalculator, objects, help, workspace, reading data\n\n\n02\nR objects, attributes, matrices\nIntroduction to R, Part 2\ntypes, vectors, subsetting, recycling, NA, factors, matrices\n\n\n03\nLists, data frames, control flow, functions\nIntroduction to R, Part 3\nlists, data frames, tibbles, if/for, writing functions\n\n\n04\nWorking with data, and drawing it\n—\nsubsetting, recoding, summaries, base graphics, wide ↔︎ long\n\n\n\nEach practical also has an appendix — optional asides for anyone who wants to know why something works. Nothing in an appendix is needed for anything else.\nThe material stops where the statistics begins. Regression and everything after it is the course’s own, and Prof. Noventa’s scripts are where you should learn it.",
+    "text": "What is here\nFour practicals. The first three run alongside the Introduction to R lectures, one each, covering the same ground more slowly and with exercises. The fourth covers handling and plotting data, which every analysis script in the course assumes you can already do.\n\n\n\n#\nPractical\nAlongside\nWhat it covers\n\n\n\n\n01\nBasics of R\nIntroduction to R, Part 1\ncalculator, objects, help, workspace, reading data\n\n\n02\nR objects, attributes, matrices\nIntroduction to R, Part 2\ntypes, vectors, subsetting, recycling, NA, factors, matrices\n\n\n03\nLists, data frames, control flow, functions\nIntroduction to R, Part 3\nlists, data frames, tibbles, if/for, writing functions\n\n\n04\nWorking with data, and drawing it\n—\nsubsetting, recoding, summaries, base graphics, wide ↔︎ long\n\n\n\nEach practical also has an appendix — optional asides for anyone who wants to know why something works. Nothing in an appendix is needed for anything else.",
     "crumbs": [
       "Start here"
     ]
@@ -691,7 +691,7 @@
     "href": "index.html#two-ways-to-use-it",
     "title": "Getting started with R",
     "section": "Two ways to use it",
-    "text": "Two ways to use it\nYou can read it in the browser — every practical is a page on this site, with all the code and its output already shown.\nOr you can download it and run it, which is the point. Each practical has a download link at the top of its page, giving you a zip containing:\n\nthe .R script for that practical,\na data/ folder with the data and a codebook explaining every variable,\nan .Rproj file.\n\nUnzip it, then double-click the .Rproj before opening the script. That sets R’s working directory for you, which is why none of these scripts contain a setwd() line.\nThe page and the script contain exactly the same material — they are generated from one source, so they cannot disagree.",
+    "text": "Two ways to use it\nYou can read it in the browser — every practical is a page on this site, with all the code and its output already shown.\nOr you can download it and run it, which is the point. Each practical has a download link at the top of its page, giving you a zip containing:\n\nthe .R script for that practical,\na data/ folder with the data and a codebook explaining every variable,\nan .Rproj file.\n\nUnzip it, then double-click the .Rproj before opening the script. That sets R’s working directory for you, which is why none of these scripts contain a setwd() line.",
     "crumbs": [
       "Start here"
     ]
@@ -701,7 +701,7 @@
     "href": "index.html#solutions",
     "title": "Getting started with R",
     "section": "Solutions",
-    "text": "Solutions\nEvery exercise has a worked solution, and they are not shown at first. Each practical’s answers appear on this site after that practical has been covered in class. Try the exercise first; the answer is worth much more once you have been stuck on it.",
+    "text": "Solutions\nEvery exercise has a worked solution, and they are not shown at first. Each practical’s answers appear on this site after each class. Try the exercise first; the answer will help you understand the material much more once you have been stuck on it.",
     "crumbs": [
       "Start here"
     ]
