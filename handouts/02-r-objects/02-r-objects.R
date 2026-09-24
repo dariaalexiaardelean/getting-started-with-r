@@ -89,18 +89,6 @@ TRUE && FALSE                     # a single comparison
 # `&` and `|` work on **every element** of a vector. `&&` and `||` take a single
 # `TRUE` or `FALSE` on each side and belong inside `if()`.
 # 
-# The lecture slides say that `&&` and `||` are "applied only to the first
-# element" of a vector. That was true until **R 4.3**, which turned it into an
-# error:
-# 
-try({
-c(TRUE, TRUE) && c(TRUE, FALSE)
-})
-
-# 
-# So if you are following the slides on a current version of R you will see this
-# error rather than an answer. Use `&` and `|` for vectors, and `&&` and `||`
-# only for the single conditions inside an `if()`.
 # 
 # Note also that `==` and `identical()` ask different questions:
 # 
