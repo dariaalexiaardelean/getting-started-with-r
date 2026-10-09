@@ -901,7 +901,7 @@
     "href": "sessions/01-r-basics/index.html#what-to-take-away",
     "title": "1 · Basics of R",
     "section": "What to take away",
-    "text": "What to take away\n\n&lt;- makes a variable, = names an argument. They are not interchangeable.\nNever compare decimals with ==.\nls() shows your workspace, rm(list = ls()) empties it.\nOpen the .Rproj; never write setwd() into a script.\nWhen anything surprises you, run str() on it.",
+    "text": "What to take away\n\n&lt;- makes a variable, = names an argument. They are not interchangeable.\nNever compare decimals with ==.\nls() shows your workspace, rm(list = ls()) empties it.\nOpen the .Rproj; this way, you don’t need to use setwd().\nWhen anything surprises you, run str() on it.",
     "crumbs": [
       "Start here",
       "Practicals",

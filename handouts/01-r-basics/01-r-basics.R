@@ -370,7 +370,7 @@ summary(memclinic$___)   # summarise the MoCA scores
 # - `<-` makes a variable, `=` names an argument. They are not interchangeable.
 # - Never compare decimals with `==`.
 # - `ls()` shows your workspace, `rm(list = ls())` empties it.
-# - Open the `.Rproj`; never write `setwd()` into a script.
+# - Open the `.Rproj`; this way, you don't need to use `setwd()`.
 # - When anything surprises you, run `str()` on it.
 # 
 # ---- Going further -------------------------------------------------------------
