@@ -229,6 +229,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">4 · Appendix — doing it again, and doing it faster</span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../../sessions/05-slr-clinical-neuropsychology/index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">5 · Simple linear regression: cognitive rehabilitation and memory gain</span></a>
+  </div>
+</li>
       </ul>
   </li>
     </ul>
@@ -981,26 +987,145 @@ NULL</code></pre>
 <span id="cb130-15"><a href="#cb130-15" aria-hidden="true" tabindex="-1"></a>session<span class="sc">$</span>scores[<span class="st">"moca"</span>]   <span class="co"># reach inside the component</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
+<p><span class="proof-title"><em>Solution</em>. </span></p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solution">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a>session <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">id       =</span> <span class="st">"P042"</span>,</span>
+<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">visit    =</span> <span class="dv">2</span>,</span>
+<span id="cb131-4"><a href="#cb131-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">scores   =</span> <span class="fu">c</span>(<span class="at">moca =</span> <span class="dv">24</span>, <span class="at">stroop =</span> <span class="dv">118</span>, <span class="at">rt =</span> <span class="dv">455</span>),</span>
+<span id="cb131-5"><a href="#cb131-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">complete =</span> <span class="cn">TRUE</span></span>
+<span id="cb131-6"><a href="#cb131-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb131-7"><a href="#cb131-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb131-8"><a href="#cb131-8" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(session)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>List of 4
+ $ id      : chr "P042"
+ $ visit   : num 2
+ $ scores  : Named num [1:3] 24 118 455
+  ..- attr(*, "names")= chr [1:3] "moca" "stroop" "rt"
+ $ complete: logi TRUE</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a>session[<span class="st">"scores"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$scores
+  moca stroop     rt 
+    24    118    455 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb135"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a>session[[<span class="st">"scores"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  moca stroop     rt 
+    24    118    455 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb137"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(session[<span class="st">"scores"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "list"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb139"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(session[[<span class="st">"scores"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "numeric"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb141"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb141-1"><a href="#cb141-1" aria-hidden="true" tabindex="-1"></a>session<span class="sc">$</span>scores[<span class="st">"moca"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>moca 
+  24 </code></pre>
+</div>
+</div>
+<p><code>[</code> returns a <strong>list</strong> of length one that contains the scores; <code>[[</code> returns the named numeric vector itself. That is why <code>class()</code> says <code>list</code> for one and <code>numeric</code> for the other.</p>
+<p>It matters because a function expecting a vector will fail on <code>session["scores"]</code> with a message about the wrong type, and the two lines look nearly identical on screen.</p>
+</div>
+</div>
+</div>
 </section>
 <section id="exercise-2-a-data-frame-is-a-list" class="level3">
 <h3 class="anchored" data-anchor-id="exercise-2-a-data-frame-is-a-list">Exercise 2 — a data frame is a list</h3>
 <div class="stub">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a>memclinic <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/memclinic.csv"</span>)</span>
-<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a><span class="fu">typeof</span>(memclinic)      <span class="co"># what is it made of?</span></span>
-<span id="cb131-4"><a href="#cb131-4" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(memclinic)       <span class="co"># what is it labelled as?</span></span>
-<span id="cb131-5"><a href="#cb131-5" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(memclinic)      <span class="co"># rows or columns?</span></span>
-<span id="cb131-6"><a href="#cb131-6" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(memclinic)</span>
-<span id="cb131-7"><a href="#cb131-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb131-8"><a href="#cb131-8" aria-hidden="true" tabindex="-1"></a><span class="co"># The same column, three ways</span></span>
-<span id="cb131-9"><a href="#cb131-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(memclinic[[<span class="st">"moca"</span>]], <span class="dv">3</span>)</span>
-<span id="cb131-10"><a href="#cb131-10" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(memclinic<span class="sc">$</span>___, <span class="dv">3</span>)</span>
-<span id="cb131-11"><a href="#cb131-11" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(memclinic[, <span class="st">"___"</span>], <span class="dv">3</span>)</span>
-<span id="cb131-12"><a href="#cb131-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb131-13"><a href="#cb131-13" aria-hidden="true" tabindex="-1"></a><span class="co"># And the container version</span></span>
-<span id="cb131-14"><a href="#cb131-14" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(memclinic[<span class="st">"moca"</span>])</span>
-<span id="cb131-15"><a href="#cb131-15" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(memclinic[[<span class="st">"moca"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb143"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb143-1"><a href="#cb143-1" aria-hidden="true" tabindex="-1"></a>memclinic <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/memclinic.csv"</span>)</span>
+<span id="cb143-2"><a href="#cb143-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb143-3"><a href="#cb143-3" aria-hidden="true" tabindex="-1"></a><span class="fu">typeof</span>(memclinic)      <span class="co"># what is it made of?</span></span>
+<span id="cb143-4"><a href="#cb143-4" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(memclinic)       <span class="co"># what is it labelled as?</span></span>
+<span id="cb143-5"><a href="#cb143-5" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(memclinic)      <span class="co"># rows or columns?</span></span>
+<span id="cb143-6"><a href="#cb143-6" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(memclinic)</span>
+<span id="cb143-7"><a href="#cb143-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb143-8"><a href="#cb143-8" aria-hidden="true" tabindex="-1"></a><span class="co"># The same column, three ways</span></span>
+<span id="cb143-9"><a href="#cb143-9" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(memclinic[[<span class="st">"moca"</span>]], <span class="dv">3</span>)</span>
+<span id="cb143-10"><a href="#cb143-10" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(memclinic<span class="sc">$</span>___, <span class="dv">3</span>)</span>
+<span id="cb143-11"><a href="#cb143-11" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(memclinic[, <span class="st">"___"</span>], <span class="dv">3</span>)</span>
+<span id="cb143-12"><a href="#cb143-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb143-13"><a href="#cb143-13" aria-hidden="true" tabindex="-1"></a><span class="co"># And the container version</span></span>
+<span id="cb143-14"><a href="#cb143-14" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(memclinic[<span class="st">"moca"</span>])</span>
+<span id="cb143-15"><a href="#cb143-15" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(memclinic[[<span class="st">"moca"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<p><span class="proof-title"><em>Solution</em>. </span></p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solution">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-8-contents" aria-controls="callout-8" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-8" class="callout-8-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb144"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a>memclinic <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/memclinic.csv"</span>)</span>
+<span id="cb144-2"><a href="#cb144-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb144-3"><a href="#cb144-3" aria-hidden="true" tabindex="-1"></a><span class="fu">typeof</span>(memclinic)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "list"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb146"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb146-1"><a href="#cb146-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(memclinic)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "data.frame"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb148"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb148-1"><a href="#cb148-1" aria-hidden="true" tabindex="-1"></a><span class="fu">length</span>(memclinic)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 10</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb150"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(memclinic)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 180</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb152"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb152-1"><a href="#cb152-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(memclinic[[<span class="st">"moca"</span>]], <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 30 24 28</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb154"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb154-1"><a href="#cb154-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(memclinic<span class="sc">$</span>moca, <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 30 24 28</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb156"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb156-1"><a href="#cb156-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(memclinic[, <span class="st">"moca"</span>], <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 30 24 28</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb158"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb158-1"><a href="#cb158-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(memclinic[<span class="st">"moca"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "data.frame"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb160"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb160-1"><a href="#cb160-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(memclinic[[<span class="st">"moca"</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "integer"</code></pre>
+</div>
+</div>
+<p><code>typeof()</code> says <code>list</code> and <code>class()</code> says <code>data.frame</code>: underneath it is a list of ten equal-length vectors, wearing a label that makes R print it as a table.</p>
+<p><code>length()</code> is 10, not 180 — the number of <em>components</em>, i.e.&nbsp;columns. For rows you need <code>nrow()</code>. This catches people constantly.</p>
+<p>The three ways of getting <code>moca</code> are identical. But <code>memclinic["moca"]</code> with a single bracket gives a one-column <strong>data frame</strong>, not a vector.</p>
+</div>
 </div>
 </div>
 </section>
@@ -1008,19 +1133,57 @@ NULL</code></pre>
 <h3 class="anchored" data-anchor-id="exercise-3-recoding-with-control-flow">Exercise 3 — recoding with control flow</h3>
 <div class="stub">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A binary flag with the vectorised if</span></span>
-<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a>memclinic<span class="sc">$</span>flag <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(memclinic<span class="sc">$</span>moca <span class="sc">&lt;</span> ___, <span class="st">"positive"</span>, <span class="st">"negative"</span>)</span>
-<span id="cb132-3"><a href="#cb132-3" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(memclinic<span class="sc">$</span>flag)</span>
-<span id="cb132-4"><a href="#cb132-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb132-5"><a href="#cb132-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Three categories, first match wins</span></span>
-<span id="cb132-6"><a href="#cb132-6" aria-hidden="true" tabindex="-1"></a>memclinic<span class="sc">$</span>severity <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
-<span id="cb132-7"><a href="#cb132-7" aria-hidden="true" tabindex="-1"></a>  memclinic<span class="sc">$</span>moca <span class="sc">&gt;=</span> <span class="dv">26</span> <span class="sc">~</span> <span class="st">"___"</span>,</span>
-<span id="cb132-8"><a href="#cb132-8" aria-hidden="true" tabindex="-1"></a>  memclinic<span class="sc">$</span>moca <span class="sc">&gt;=</span> <span class="dv">20</span> <span class="sc">~</span> <span class="st">"___"</span>,</span>
-<span id="cb132-9"><a href="#cb132-9" aria-hidden="true" tabindex="-1"></a>  <span class="cn">TRUE</span>                 <span class="sc">~</span> <span class="st">"moderate-severe"</span></span>
-<span id="cb132-10"><a href="#cb132-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb132-11"><a href="#cb132-11" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(memclinic<span class="sc">$</span>severity)</span>
-<span id="cb132-12"><a href="#cb132-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb132-13"><a href="#cb132-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Why would putting the &gt;= 20 line first be wrong?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb162"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb162-1"><a href="#cb162-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A binary flag with the vectorised if</span></span>
+<span id="cb162-2"><a href="#cb162-2" aria-hidden="true" tabindex="-1"></a>memclinic<span class="sc">$</span>flag <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(memclinic<span class="sc">$</span>moca <span class="sc">&lt;</span> ___, <span class="st">"positive"</span>, <span class="st">"negative"</span>)</span>
+<span id="cb162-3"><a href="#cb162-3" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(memclinic<span class="sc">$</span>flag)</span>
+<span id="cb162-4"><a href="#cb162-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb162-5"><a href="#cb162-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Three categories, first match wins</span></span>
+<span id="cb162-6"><a href="#cb162-6" aria-hidden="true" tabindex="-1"></a>memclinic<span class="sc">$</span>severity <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb162-7"><a href="#cb162-7" aria-hidden="true" tabindex="-1"></a>  memclinic<span class="sc">$</span>moca <span class="sc">&gt;=</span> <span class="dv">26</span> <span class="sc">~</span> <span class="st">"___"</span>,</span>
+<span id="cb162-8"><a href="#cb162-8" aria-hidden="true" tabindex="-1"></a>  memclinic<span class="sc">$</span>moca <span class="sc">&gt;=</span> <span class="dv">20</span> <span class="sc">~</span> <span class="st">"___"</span>,</span>
+<span id="cb162-9"><a href="#cb162-9" aria-hidden="true" tabindex="-1"></a>  <span class="cn">TRUE</span>                 <span class="sc">~</span> <span class="st">"moderate-severe"</span></span>
+<span id="cb162-10"><a href="#cb162-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb162-11"><a href="#cb162-11" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(memclinic<span class="sc">$</span>severity)</span>
+<span id="cb162-12"><a href="#cb162-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb162-13"><a href="#cb162-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Why would putting the &gt;= 20 line first be wrong?</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<p><span class="proof-title"><em>Solution</em>. </span></p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solution">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-9-contents" aria-controls="callout-9" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-9" class="callout-9-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb163"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true" tabindex="-1"></a>memclinic<span class="sc">$</span>flag <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(memclinic<span class="sc">$</span>moca <span class="sc">&lt;</span> <span class="dv">26</span>, <span class="st">"positive"</span>, <span class="st">"negative"</span>)</span>
+<span id="cb163-2"><a href="#cb163-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(memclinic<span class="sc">$</span>flag)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+negative positive 
+      83       97 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb165"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb165-1"><a href="#cb165-1" aria-hidden="true" tabindex="-1"></a>memclinic<span class="sc">$</span>severity <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">case_when</span>(</span>
+<span id="cb165-2"><a href="#cb165-2" aria-hidden="true" tabindex="-1"></a>  memclinic<span class="sc">$</span>moca <span class="sc">&gt;=</span> <span class="dv">26</span> <span class="sc">~</span> <span class="st">"normal"</span>,</span>
+<span id="cb165-3"><a href="#cb165-3" aria-hidden="true" tabindex="-1"></a>  memclinic<span class="sc">$</span>moca <span class="sc">&gt;=</span> <span class="dv">20</span> <span class="sc">~</span> <span class="st">"mild"</span>,</span>
+<span id="cb165-4"><a href="#cb165-4" aria-hidden="true" tabindex="-1"></a>  <span class="cn">TRUE</span>                 <span class="sc">~</span> <span class="st">"moderate-severe"</span></span>
+<span id="cb165-5"><a href="#cb165-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb165-6"><a href="#cb165-6" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(memclinic<span class="sc">$</span>severity)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+           mild moderate-severe          normal 
+             61              36              83 </code></pre>
+</div>
+</div>
+<p>If <code>&gt;= 20</code> came first, everyone scoring 26 or more would also satisfy it, and because the <strong>first</strong> matching condition wins they would all be labelled “mild”. The normal group would vanish — and, once again, with no error.</p>
+<p>Conditions in <code>case_when()</code> have to run from the most specific to the most general.</p>
+</div>
 </div>
 </div>
 </section>
@@ -1029,18 +1192,66 @@ NULL</code></pre>
 <p>Write a function that takes a vector of scores and returns how many fall below a cut-off, with the cut-off as an argument that defaults to 26.</p>
 <div class="stub">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a>n_below <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">cutoff =</span> ___) {</span>
-<span id="cb133-2"><a href="#cb133-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(x <span class="sc">&lt;</span> cutoff, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb133-3"><a href="#cb133-3" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb133-4"><a href="#cb133-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb133-5"><a href="#cb133-5" aria-hidden="true" tabindex="-1"></a><span class="fu">n_below</span>(memclinic<span class="sc">$</span>moca)</span>
-<span id="cb133-6"><a href="#cb133-6" aria-hidden="true" tabindex="-1"></a><span class="fu">n_below</span>(memclinic<span class="sc">$</span>moca, <span class="at">cutoff =</span> ___)</span>
-<span id="cb133-7"><a href="#cb133-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb133-8"><a href="#cb133-8" aria-hidden="true" tabindex="-1"></a><span class="fu">formals</span>(n_below)</span>
-<span id="cb133-9"><a href="#cb133-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb133-10"><a href="#cb133-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Now break it on purpose: what does this give, and why?</span></span>
-<span id="cb133-11"><a href="#cb133-11" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="dv">24</span>, <span class="dv">26</span>, <span class="dv">28</span>)</span>
-<span id="cb133-12"><a href="#cb133-12" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">c</span>(<span class="dv">24</span>, <span class="dv">26</span>, <span class="dv">28</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb167"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb167-1"><a href="#cb167-1" aria-hidden="true" tabindex="-1"></a>n_below <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">cutoff =</span> ___) {</span>
+<span id="cb167-2"><a href="#cb167-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(x <span class="sc">&lt;</span> cutoff, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb167-3"><a href="#cb167-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb167-4"><a href="#cb167-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb167-5"><a href="#cb167-5" aria-hidden="true" tabindex="-1"></a><span class="fu">n_below</span>(memclinic<span class="sc">$</span>moca)</span>
+<span id="cb167-6"><a href="#cb167-6" aria-hidden="true" tabindex="-1"></a><span class="fu">n_below</span>(memclinic<span class="sc">$</span>moca, <span class="at">cutoff =</span> ___)</span>
+<span id="cb167-7"><a href="#cb167-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb167-8"><a href="#cb167-8" aria-hidden="true" tabindex="-1"></a><span class="fu">formals</span>(n_below)</span>
+<span id="cb167-9"><a href="#cb167-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb167-10"><a href="#cb167-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Now break it on purpose: what does this give, and why?</span></span>
+<span id="cb167-11"><a href="#cb167-11" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="dv">24</span>, <span class="dv">26</span>, <span class="dv">28</span>)</span>
+<span id="cb167-12"><a href="#cb167-12" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">c</span>(<span class="dv">24</span>, <span class="dv">26</span>, <span class="dv">28</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<p><span class="proof-title"><em>Solution</em>. </span></p>
+<div class="callout callout-style-default callout-tip callout-titled" title="Solution">
+<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-10-contents" aria-controls="callout-10" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Solution
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-10" class="callout-10-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb168"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb168-1"><a href="#cb168-1" aria-hidden="true" tabindex="-1"></a>n_below <span class="ot">&lt;-</span> <span class="cf">function</span>(x, <span class="at">cutoff =</span> <span class="dv">26</span>) {</span>
+<span id="cb168-2"><a href="#cb168-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(x <span class="sc">&lt;</span> cutoff, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb168-3"><a href="#cb168-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb168-4"><a href="#cb168-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb168-5"><a href="#cb168-5" aria-hidden="true" tabindex="-1"></a><span class="fu">n_below</span>(memclinic<span class="sc">$</span>moca)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 97</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb170"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb170-1"><a href="#cb170-1" aria-hidden="true" tabindex="-1"></a><span class="fu">n_below</span>(memclinic<span class="sc">$</span>moca, <span class="at">cutoff =</span> <span class="dv">20</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 36</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb172"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb172-1"><a href="#cb172-1" aria-hidden="true" tabindex="-1"></a><span class="fu">formals</span>(n_below)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$x
+
+
+$cutoff
+[1] 26</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb174"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb174-1"><a href="#cb174-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="dv">24</span>, <span class="dv">26</span>, <span class="dv">28</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 24</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb176"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb176-1"><a href="#cb176-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">c</span>(<span class="dv">24</span>, <span class="dv">26</span>, <span class="dv">28</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 26</code></pre>
+</div>
+</div>
+<p>97 people score below 26 and 46 below 20. The default means the common case needs no second argument, while the cut-off is still there when you want it.</p>
+<p><code>mean(24, 26, 28)</code> returns <strong>24</strong>. <code>mean()</code>’s first argument is the whole vector, and the others are matched to <code>trim</code> and <code>na.rm</code> — so it averaged a single number and ignored the rest without complaint. <code>mean(c(24, 26, 28))</code> returns 26, which is what was meant.</p>
+</div>
 </div>
 </div>
 </section>
