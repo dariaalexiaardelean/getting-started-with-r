@@ -204,564 +204,255 @@
     ]
   },
   {
-    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html",
-    "href": "sessions/05-slr-clinical-neuropsychology/index.html",
-    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
+    "objectID": "sessions/06-anova-clinical-neuropsychology/index.html",
+    "href": "sessions/06-anova-clinical-neuropsychology/index.html",
+    "title": "6 · ANOVA as regression: patient groups and recovery over time",
     "section": "",
-    "text": "Note⬇ Download the R script\n\n\n\nThe script simulates its own data, so it needs nothing else: open it in RStudio and run it line by line.",
+    "text": "Note⬇ Download this practical\n\n\n\nA zip with the R script, the data and an .Rproj. Unzip it and open the .Rproj first, so that data/... paths work.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+      "6 · ANOVA as regression: patient groups and recovery over time"
     ]
   },
   {
-    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#slr-example-cognitive-rehabilitation-and-memory-gain",
-    "href": "sessions/05-slr-clinical-neuropsychology/index.html#slr-example-cognitive-rehabilitation-and-memory-gain",
-    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
-    "section": "SLR Example: Cognitive Rehabilitation and Memory Gain",
-    "text": "SLR Example: Cognitive Rehabilitation and Memory Gain\nContext:\nCognitive rehabilitation is a core intervention in clinical neuropsychology. Patients recovering from acquired brain injury (e.g. stroke, TBI) undergo structured cognitive training programmes aimed at restoring everyday function.\nHere we ask: does the number of completed training hours predict the gain in episodic memory performance observed at the end of rehabilitation? Memory gain is operationalised as the change score on a standardised word-list recall test (post-treatment minus pre-treatment, in raw score points). A positive gain means improvement.\nYou will see:\n\nHow to fit a simple linear regression in R\nHow to interpret the intercept and slope in a clinical context\nHow to reproduce every number in summary() and anova() manually\nHow to run the four standard diagnostic plots\n\n\nlibrary(psych)\nlibrary(ggplot2)\n\n\nAttaching package: 'ggplot2'\n\n\nThe following objects are masked from 'package:psych':\n\n    %+%, alpha\n\nrm(list = ls())",
+    "objectID": "sessions/06-anova-clinical-neuropsychology/index.html#anova-example-executive-function-in-clinical-groups",
+    "href": "sessions/06-anova-clinical-neuropsychology/index.html#anova-example-executive-function-in-clinical-groups",
+    "title": "6 · ANOVA as regression: patient groups and recovery over time",
+    "section": "ANOVA Example: Executive Function in Clinical Groups",
+    "text": "ANOVA Example: Executive Function in Clinical Groups\nContext:\nThe outcome is the Trail Making Test part B (TMT-B): the patient connects numbers and letters in alternating order as quickly as possible. The score is the time in seconds, so higher means worse. The data are simulated.\nYou will see:\n\nA t-test and an ANOVA as linear regressions\nHow coding a factor changes what the coefficients mean\nPost-hoc comparisons and assumption checks\nRepeated measures with aov() and lmer()\n\nIf you do not have these packages yet, install them once:\n\ninstall.packages(c(\"car\", \"rstatix\", \"lme4\", \"lmerTest\"))",
     "crumbs": [
       "Start here",
       "Practicals",
-      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+      "6 · ANOVA as regression: patient groups and recovery over time"
     ]
   },
   {
-    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#data-generation",
-    "href": "sessions/05-slr-clinical-neuropsychology/index.html#data-generation",
-    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
-    "section": "Data generation",
-    "text": "Data generation\n\nn        &lt;- 15   # small rehabilitation cohort — easy to inspect\nalpha_T  &lt;- 2.0  # true intercept: expected gain with zero training hours (baseline drift)\nbeta_T   &lt;- 0.8  # true slope: each extra training hour gains 0.8 recall points on average\nsd_error &lt;- 3.0  # individual variability around the true line\nmu_x     &lt;- 12   # mean training hours completed across patients\nsigma_x  &lt;- 4    # SD of training hours\n\nset.seed(42)\ntrainingHours &lt;- rnorm(n, mu_x, sigma_x)\nmemoryGain    &lt;- alpha_T + beta_T * trainingHours + rnorm(n, 0, sd_error)\n\ndataRehab &lt;- data.frame(\n  memoryGain    = memoryGain,    # outcome Y  (recall score change, points)\n  trainingHours = trainingHours  # predictor X (hours of cognitive training completed)\n)\n\n# quick look\nstr(dataRehab)\n\n'data.frame':   15 obs. of  2 variables:\n $ memoryGain   : num  17.89 8.94 4.79 6.3 16.85 ...\n $ trainingHours: num  17.48 9.74 13.45 14.53 13.62 ...\n\nhead(dataRehab)\n\n\n  \n\n\npsych::describe(dataRehab)",
+    "objectID": "sessions/06-anova-clinical-neuropsychology/index.html#the-data-three-diagnostic-groups",
+    "href": "sessions/06-anova-clinical-neuropsychology/index.html#the-data-three-diagnostic-groups",
+    "title": "6 · ANOVA as regression: patient groups and recovery over time",
+    "section": "The data: three diagnostic groups",
+    "text": "The data: three diagnostic groups\n\ngroups &lt;- read.csv(\"data/tmt-groups.csv\")\nhead(groups)\n\n\n  \n\n\n# the first level is the reference group, so put controls first\ngroups$diagnosis &lt;- factor(groups$diagnosis, levels = c(\"Control\", \"MCI\", \"AD\"))\n\ntapply(groups$tmt_b, groups$diagnosis, mean)\n\nControl     MCI      AD \n 99.025 132.025 161.150 \n\nboxplot(tmt_b ~ diagnosis, data = groups)",
     "crumbs": [
       "Start here",
       "Practicals",
-      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+      "6 · ANOVA as regression: patient groups and recovery over time"
     ]
   },
   {
-    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#visualise-the-data",
-    "href": "sessions/05-slr-clinical-neuropsychology/index.html#visualise-the-data",
-    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
-    "section": "Visualise the data",
-    "text": "Visualise the data\n\nwith(dataRehab, plot(trainingHours, memoryGain,\n                     xlab = \"Cognitive training completed (hours)\",\n                     ylab = \"Memory gain (recall score change)\",\n                     main = \"Rehabilitation dose and memory recovery\"))\nabline(lm(memoryGain ~ trainingHours, data = dataRehab), col = \"steelblue\", lwd = 2)\n\n\n\n\n\n\n\nggplot(dataRehab, aes(x = trainingHours, y = memoryGain)) +\n  geom_point(size = 2) +\n  geom_smooth(method = \"lm\", se = TRUE, colour = \"steelblue\") +\n  labs(x = \"Cognitive training completed (hours)\",\n       y = \"Memory gain (recall score change)\",\n       title = \"Does rehabilitation dose predict memory recovery?\")\n\n`geom_smooth()` using formula = 'y ~ x'",
+    "objectID": "sessions/06-anova-clinical-neuropsychology/index.html#part-1-do-mci-patients-differ-from-controls",
+    "href": "sessions/06-anova-clinical-neuropsychology/index.html#part-1-do-mci-patients-differ-from-controls",
+    "title": "6 · ANOVA as regression: patient groups and recovery over time",
+    "section": "Part 1: Do MCI patients differ from controls?",
+    "text": "Part 1: Do MCI patients differ from controls?\nThe t-test and lm() give the same t (with the sign flipped) and the same p. The slope is the difference between the two group means.\n\ntwo_groups &lt;- droplevels(subset(groups, diagnosis != \"AD\"))\n\nt.test(tmt_b ~ diagnosis, data = two_groups, var.equal = TRUE)\n\n\n    Two Sample t-test\n\ndata:  tmt_b by diagnosis\nt = -5.4705, df = 78, p-value = 5.244e-07\nalternative hypothesis: true difference in means between group Control and group MCI is not equal to 0\n95 percent confidence interval:\n -45.00956 -20.99044\nsample estimates:\nmean in group Control     mean in group MCI \n               99.025               132.025 \n\nsummary(lm(tmt_b ~ diagnosis, data = two_groups))\n\n\nCall:\nlm(formula = tmt_b ~ diagnosis, data = two_groups)\n\nResiduals:\n    Min      1Q  Median      3Q     Max \n-77.025 -15.275   2.475  16.225  57.975 \n\nCoefficients:\n             Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)    99.025      4.266   23.21  &lt; 2e-16 ***\ndiagnosisMCI   33.000      6.032    5.47 5.24e-07 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 26.98 on 78 degrees of freedom\nMultiple R-squared:  0.2773,    Adjusted R-squared:  0.268 \nF-statistic: 29.93 on 1 and 78 DF,  p-value: 5.244e-07",
     "crumbs": [
       "Start here",
       "Practicals",
-      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+      "6 · ANOVA as regression: patient groups and recovery over time"
     ]
   },
   {
-    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#step-1-fit-the-model",
-    "href": "sessions/05-slr-clinical-neuropsychology/index.html#step-1-fit-the-model",
-    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
-    "section": "Step 1: Fit the model",
-    "text": "Step 1: Fit the model\n\n# Fit the simple linear regression\nlmRehab &lt;- lm(memoryGain ~ trainingHours, data = dataRehab)\nlmRehab\n\n\nCall:\nlm(formula = memoryGain ~ trainingHours, data = dataRehab)\n\nCoefficients:\n  (Intercept)  trainingHours  \n      -0.8332         0.9286  \n\n# Inspect the full output\nsummary(lmRehab)\n\n\nCall:\nlm(formula = memoryGain ~ trainingHours, data = dataRehab)\n\nResiduals:\n    Min      1Q  Median      3Q     Max \n-6.8659 -1.9786  0.4249  2.6534  7.0081 \n\nCoefficients:\n              Estimate Std. Error t value Pr(&gt;|t|)   \n(Intercept)    -0.8332     3.9555  -0.211  0.83643   \ntrainingHours   0.9286     0.2730   3.401  0.00473 **\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 4.189 on 13 degrees of freedom\nMultiple R-squared:  0.4709,    Adjusted R-squared:  0.4302 \nF-statistic: 11.57 on 1 and 13 DF,  p-value: 0.004729\n\nanova(lmRehab)\n\n\n  \n\n\n# The estimated slope can be compared to the true value beta_T = 0.8 used to generate the data.",
+    "objectID": "sessions/06-anova-clinical-neuropsychology/index.html#part-2-do-the-three-groups-differ",
+    "href": "sessions/06-anova-clinical-neuropsychology/index.html#part-2-do-the-three-groups-differ",
+    "title": "6 · ANOVA as regression: patient groups and recovery over time",
+    "section": "Part 2: Do the three groups differ?",
+    "text": "Part 2: Do the three groups differ?\n\nStep 1: Fit the model\n\nlm_mod &lt;- lm(tmt_b ~ diagnosis, data = groups)\nsummary(lm_mod)\n\n\nCall:\nlm(formula = tmt_b ~ diagnosis, data = groups)\n\nResiduals:\n   Min     1Q Median     3Q    Max \n-77.03 -14.37   0.85  15.22  66.85 \n\nCoefficients:\n             Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)    99.025      4.128  23.991  &lt; 2e-16 ***\ndiagnosisMCI   33.000      5.837   5.653 1.13e-07 ***\ndiagnosisAD    62.125      5.837  10.643  &lt; 2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 26.11 on 117 degrees of freedom\nMultiple R-squared:  0.4922,    Adjusted R-squared:  0.4835 \nF-statistic: 56.71 on 2 and 117 DF,  p-value: &lt; 2.2e-16\n\nanova(lm_mod)\n\n\n  \n\n\n\n\n\nStep 2: Change the coding\nWith deviation coding the fit is the same, but the intercept becomes the general mean, and each coefficient is a group’s difference from it. R labels them by level number: diagnosis1 is controls and diagnosis2 is MCI. AD gets no row of its own.\n\nlm_mod_sum &lt;- lm(tmt_b ~ diagnosis, contrasts = list(diagnosis = \"contr.sum\"),\n                 data = groups)\nsummary(lm_mod_sum)\n\n\nCall:\nlm(formula = tmt_b ~ diagnosis, data = groups, contrasts = list(diagnosis = \"contr.sum\"))\n\nResiduals:\n   Min     1Q Median     3Q    Max \n-77.03 -14.37   0.85  15.22  66.85 \n\nCoefficients:\n            Estimate Std. Error t value Pr(&gt;|t|)    \n(Intercept)  130.733      2.383  54.859  &lt; 2e-16 ***\ndiagnosis1   -31.708      3.370  -9.408  5.4e-16 ***\ndiagnosis2     1.292      3.370   0.383    0.702    \n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 26.11 on 117 degrees of freedom\nMultiple R-squared:  0.4922,    Adjusted R-squared:  0.4835 \nF-statistic: 56.71 on 2 and 117 DF,  p-value: &lt; 2.2e-16\n\nmean(groups$tmt_b)\n\n[1] 130.7333\n\n\n\n\nStep 3: The usual ANOVA, and which groups differ\naov() fits the same model. With a single factor, types I, II and III give the same F for diagnosis.\n\naov_mod &lt;- aov(tmt_b ~ diagnosis, data = groups)\nsummary(aov_mod)\n\n             Df Sum Sq Mean Sq F value Pr(&gt;F)    \ndiagnosis     2  77290   38645   56.71 &lt;2e-16 ***\nResiduals   117  79735     681                   \n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\ncar::Anova(aov_mod, type = 2)\n\n\n  \n\n\ncar::Anova(aov_mod, type = 3)\n\n\n  \n\n\nTukeyHSD(aov_mod)\n\n  Tukey multiple comparisons of means\n    95% family-wise confidence level\n\nFit: aov(formula = tmt_b ~ diagnosis, data = groups)\n\n$diagnosis\n              diff      lwr      upr   p adj\nMCI-Control 33.000 19.14262 46.85738 3.0e-07\nAD-Control  62.125 48.26762 75.98238 0.0e+00\nAD-MCI      29.125 15.26762 42.98238 6.3e-06\n\n\n\n\nStep 4: Diagnostics\n\npar(mfrow = c(2, 2))\nplot(aov_mod)\n\n\n\n\n\n\n\ndev.off()\n\n\ncar::leveneTest(aov_mod) # equality of variances across groups",
     "crumbs": [
       "Start here",
       "Practicals",
-      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+      "6 · ANOVA as regression: patient groups and recovery over time"
     ]
   },
   {
-    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#step-2-manual-slope-and-intercept",
-    "href": "sessions/05-slr-clinical-neuropsychology/index.html#step-2-manual-slope-and-intercept",
-    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
-    "section": "Step 2: Manual slope and intercept",
-    "text": "Step 2: Manual slope and intercept\n\nmeans &lt;- apply(dataRehab, 2, mean)\nstdvs &lt;- apply(dataRehab, 2, sd)\nmeans\n\n   memoryGain trainingHours \n     12.10837      13.93694 \n\nstdvs\n\n   memoryGain trainingHours \n     5.549393      4.100973 \n\n# Pearson r\nr &lt;- with(dataRehab, cor(memoryGain, trainingHours))\nr\n\n[1] 0.6862163\n\n# Slope from correlation: beta = r * (SD_y / SD_x)\nhat_beta &lt;- unname(r * (stdvs[\"memoryGain\"] / stdvs[\"trainingHours\"]))\nhat_beta\n\n[1] 0.9285805\n\n# Intercept: alpha = mean_y - beta * mean_x\nhat_alpha &lt;- unname(means[\"memoryGain\"] - hat_beta * means[\"trainingHours\"])\nhat_alpha\n\n[1] -0.8332003\n\n# Compare to lm()\ncoef(lmRehab)\n\n  (Intercept) trainingHours \n   -0.8332003     0.9285805",
+    "objectID": "sessions/06-anova-clinical-neuropsychology/index.html#part-3-do-stroke-patients-improve-with-rehabilitation",
+    "href": "sessions/06-anova-clinical-neuropsychology/index.html#part-3-do-stroke-patients-improve-with-rehabilitation",
+    "title": "6 · ANOVA as regression: patient groups and recovery over time",
+    "section": "Part 3: Do stroke patients improve with rehabilitation?",
+    "text": "Part 3: Do stroke patients improve with rehabilitation?\nThe same 40 patients do the TMT-B at three visits, so the file has one row per patient per visit. Some patients are faster than others at every visit, and a repeated-measures model separates that from the change over time.\n\nrehab &lt;- read.csv(\"data/tmt-rehab.csv\")\nhead(rehab)\n\n\n  \n\n\nrehab$patient &lt;- factor(rehab$patient)\nrehab$visit   &lt;- factor(rehab$visit, levels = c(\"Baseline\", \"Post\", \"FollowUp\"))\n\ntapply(rehab$tmt_b, rehab$visit, mean)\n\nBaseline     Post FollowUp \n 170.400  148.875  123.050 \n\nboxplot(tmt_b ~ visit, data = rehab)\n\n\n\n\n\n\n\n\n\nStep 1: Repeated-measures ANOVA\nIgnoring the repeated measures leaves the differences between patients in the error term, which gives a much weaker F. Error(patient/visit) removes them.\n\nsummary(aov(tmt_b ~ visit, data = rehab))                         # wrong: treats visits as independent\n\n             Df Sum Sq Mean Sq F value   Pr(&gt;F)    \nvisit         2  44964   22482   24.91 9.68e-10 ***\nResiduals   117 105574     902                     \n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nsummary(aov(tmt_b ~ visit + Error(patient/visit), data = rehab))  # right\n\n\nError: patient\n          Df Sum Sq Mean Sq F value Pr(&gt;F)\nResiduals 39  88718    2275               \n\nError: patient:visit\n          Df Sum Sq Mean Sq F value Pr(&gt;F)    \nvisit      2  44964   22482     104 &lt;2e-16 ***\nResiduals 78  16856     216                   \n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\n# same analysis, with Mauchly's test of sphericity\nrstatix::anova_test(data = rehab, dv = tmt_b, wid = patient, within = visit)\n\nANOVA Table (type III tests)\n\n$ANOVA\n  Effect DFn DFd       F        p p&lt;.05   ges\n1  visit   2  78 104.036 9.75e-23     * 0.299\n\n$`Mauchly's Test for Sphericity`\n  Effect     W    p p&lt;.05\n1  visit 0.961 0.47      \n\n$`Sphericity Corrections`\n  Effect   GGe      DF[GG]    p[GG] p[GG]&lt;.05   HFe      DF[HF]    p[HF]\n1  visit 0.962 1.92, 75.07 5.64e-22         * 1.011 2.02, 78.89 9.75e-23\n  p[HF]&lt;.05\n1         *\n\n\n\n\nStep 2: Mixed-effects model\n(1 | patient) gives each patient their own baseline level. Each visit coefficient is the change from baseline, in seconds.\n\nlibrary(lme4)\n\nLoading required package: Matrix\n\nlibrary(lmerTest) # load this to get p-values in lmer\n\n\nAttaching package: 'lmerTest'\n\n\nThe following object is masked from 'package:lme4':\n\n    lmer\n\n\nThe following object is masked from 'package:stats':\n\n    step\n\nlmer_mod &lt;- lmer(tmt_b ~ visit + (1 | patient), data = rehab)\nsummary(lmer_mod)\n\nLinear mixed model fit by REML. t-tests use Satterthwaite's method [\nlmerModLmerTest]\nFormula: tmt_b ~ visit + (1 | patient)\n   Data: rehab\n\nREML criterion at convergence: 1063.9\n\nScaled residuals: \n    Min      1Q  Median      3Q     Max \n-1.9447 -0.4933 -0.0537  0.6091  1.8725 \n\nRandom effects:\n Groups   Name        Variance Std.Dev.\n patient  (Intercept) 686.2    26.2    \n Residual             216.1    14.7    \nNumber of obs: 120, groups:  patient, 40\n\nFixed effects:\n              Estimate Std. Error      df t value Pr(&gt;|t|)    \n(Intercept)    170.400      4.750  54.248  35.877  &lt; 2e-16 ***\nvisitPost      -21.525      3.287  78.000  -6.548 5.62e-09 ***\nvisitFollowUp  -47.350      3.287  78.000 -14.405  &lt; 2e-16 ***\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nCorrelation of Fixed Effects:\n            (Intr) vstPst\nvisitPost   -0.346       \nvisitFllwUp -0.346  0.500\n\n# proportion of the remaining variance due to differences between patients\nvars &lt;- as.data.frame(VarCorr(lmer_mod))\nvars$vcov[1] / (vars$vcov[1] + vars$vcov[2])\n\n[1] 0.7605144\n\nplot(lmer_mod)              # residuals vs fitted\n\n\n\n\n\n\n\nqqnorm(residuals(lmer_mod)) # normality of residuals",
     "crumbs": [
       "Start here",
       "Practicals",
-      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+      "6 · ANOVA as regression: patient groups and recovery over time"
     ]
   },
   {
-    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#step-3-sums-of-squares-and-r-squared",
-    "href": "sessions/05-slr-clinical-neuropsychology/index.html#step-3-sums-of-squares-and-r-squared",
-    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
-    "section": "Step 3: Sums of squares and R-squared",
-    "text": "Step 3: Sums of squares and R-squared\n\nfitted_vals   &lt;- hat_alpha + hat_beta * dataRehab$trainingHours\nresidual_vals &lt;- dataRehab$memoryGain - fitted_vals\n\nSS_Tot &lt;- unname((n - 1) * stdvs[\"memoryGain\"]^2)       # total variability in Y\nSS_Reg &lt;- sum((fitted_vals - means[\"memoryGain\"])^2)     # explained by training hours\nSS_Res &lt;- sum(residual_vals^2)                           # unexplained (residuals)\nSS_Tot\n\n[1] 431.1407\n\nSS_Reg\n\n[1] 203.021\n\nSS_Res\n\n[1] 228.1197\n\n# check: SS_Tot == SS_Reg + SS_Res\ndplyr::near(SS_Tot, SS_Reg + SS_Res)\n\n[1] TRUE\n\n# Compare to anova()\nanova(lmRehab)\n\n\n  \n\n\n# R-squared: proportion of variance in memory gain explained by training dose\nR_sq &lt;- SS_Reg / SS_Tot\nR_sq\n\n[1] 0.4708928",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
-    ]
-  },
-  {
-    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#step-4-f-statistic-and-p-value",
-    "href": "sessions/05-slr-clinical-neuropsychology/index.html#step-4-f-statistic-and-p-value",
-    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
-    "section": "Step 4: F-statistic and p-value",
-    "text": "Step 4: F-statistic and p-value\n\nMS_Reg &lt;- SS_Reg / 1          # df_model = 1 (one predictor)\nMS_Res &lt;- SS_Res / (n - 2)    # df_residual = n - 2\nF_stat &lt;- MS_Reg / MS_Res\nMS_Reg\n\n[1] 203.021\n\nMS_Res\n\n[1] 17.54767\n\nF_stat\n\n[1] 11.56969\n\n# p-value from the F distribution\npf(F_stat, df1 = 1, df2 = n - 2, lower.tail = FALSE)\n\n[1] 0.004729361",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
-    ]
-  },
-  {
-    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#step-5-diagnostics",
-    "href": "sessions/05-slr-clinical-neuropsychology/index.html#step-5-diagnostics",
-    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
-    "section": "Step 5: Diagnostics",
-    "text": "Step 5: Diagnostics\n\npar(mfrow = c(2, 2))\nplot(lmRehab)\n\n\n\n\n\n\n\ndev.off()\n\n# Check: normality of residuals (Q-Q plot), linearity (residuals vs fitted),\n# homoscedasticity (scale-location), and influential cases (Cook's distance).",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
-    ]
-  },
-  {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html",
-    "href": "sessions/03-lists-dataframes-functions/index.html",
-    "title": "3 · Lists, data frames, control flow, functions",
+    "objectID": "sessions/04-working-with-data/index.html",
+    "href": "sessions/04-working-with-data/index.html",
+    "title": "4 · Working with data, and drawing it",
     "section": "",
-    "text": "Note⬇ Download this practical\n\n\n\nA zip containing the R script, the data, and an .Rproj file. Unzip it somewhere you can find again, then double-click the .Rproj.\nOptional extra practice alongside Introduction to R — Part 3. It does not replace the lecture, and nothing here is assessed.",
+    "text": "Note\n\n\n\nOptional extra practice, and unlike practicals 1 to 3 this one runs alongside no lecture at all. It covers the handling and plotting that Prof. Noventa’s analysis scripts assume you already know, and that the Introduction to R lectures do not cover. Nothing here is assessed.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#what-you-will-be-able-to-do",
-    "href": "sessions/03-lists-dataframes-functions/index.html#what-you-will-be-able-to-do",
-    "title": "3 · Lists, data frames, control flow, functions",
+    "objectID": "sessions/04-working-with-data/index.html#what-you-will-be-able-to-do",
+    "href": "sessions/04-working-with-data/index.html#what-you-will-be-able-to-do",
+    "title": "4 · Working with data, and drawing it",
     "section": "What you will be able to do",
-    "text": "What you will be able to do\n\nbuild a list, and pick things out of it with [, [[ and $;\nexplain why a data frame is a list, and what follows from that;\nread the output of str() on a fitted model;\nwrite if, ifelse() and for, and say when you do not need a loop;\nwrite a function, with arguments and a return value.",
+    "text": "What you will be able to do\nBy the end of this practical you should be able to:\n\npull out the rows and columns you want, and sort a table;\ncreate a new variable by recoding an existing one;\nset the order of a factor’s levels, and say why that changes a model;\nsummarise a variable within each diagnostic group;\ndraw a histogram, a boxplot and a scatterplot, with axes a reader can understand;\nturn a wide table into a long one, which is the shape repeated-measures analyses need.\n\n\n\n\n\n\n\nNote⬇ Download this practical\n\n\n\nA zip containing the R script, the data, and an .Rproj file. Unzip it somewhere you can find again, then double-click the .Rproj.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#before-you-start",
-    "href": "sessions/03-lists-dataframes-functions/index.html#before-you-start",
-    "title": "3 · Lists, data frames, control flow, functions",
+    "objectID": "sessions/04-working-with-data/index.html#before-you-start",
+    "href": "sessions/04-working-with-data/index.html#before-you-start",
+    "title": "4 · Working with data, and drawing it",
     "section": "Before you start",
-    "text": "Before you start\n\n\n\n\n\n\nImportantOpen the .Rproj first, and run one line at a time\n\n\n\nDouble-click the .Rproj in this folder, then use Ctrl+Enter (Cmd+Enter on a Mac). Do not press Source while a ___ blank remains.",
+    "text": "Before you start\n\n\n\n\n\n\nImportantOpen the .Rproj file first\n\n\n\nDouble-click the .Rproj file in this folder. If you see cannot open file 'data/memclinic.csv', run getwd() — you opened the script rather than the project.\n\n\n\n\n\n\n\n\nImportantOne line at a time — do not press Source\n\n\n\nCtrl+Enter (Cmd+Enter on a Mac) runs the current line. The Source button will fail on the whole file while any ___ blank is still unfilled.\n\n\n\n# We call dplyr and psych functions with the pkg::fun() form rather than\n# loading them, so it is always obvious where a function came from.\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\nstr(memclinic)\n\n'data.frame':   180 obs. of  10 variables:\n $ id            : chr  \"P059\" \"P102\" \"P019\" \"P001\" ...\n $ group         : chr  \"HC\" \"MCI\" \"HC\" \"HC\" ...\n $ age           : int  71 66 64 74 58 61 76 71 57 73 ...\n $ sex           : chr  \"M\" \"M\" \"F\" \"F\" ...\n $ educ_years    : int  12 12 16 12 12 5 11 13 13 13 ...\n $ moca          : int  30 24 28 28 24 28 20 18 20 19 ...\n $ hippo_vol_mm3 : int  3801 3546 4411 3871 3570 3507 2971 3190 3408 2977 ...\n $ stroop_cost_ms: int  64 129 42 56 123 158 174 154 88 184 ...\n $ rt_mean       : int  387 403 338 360 404 353 492 484 412 446 ...\n $ csf_ptau      : num  14.8 38.2 19.5 16.1 21.4 15.1 71.5 36.1 17.7 33.1 ...\n\n\nThe codebook describes every column.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#lists",
-    "href": "sessions/03-lists-dataframes-functions/index.html#lists",
-    "title": "3 · Lists, data frames, control flow, functions",
-    "section": "Lists",
-    "text": "Lists\nA list is a generic vector: a collection of components that can be objects of different types, and of different lengths.\n\n(lis1 &lt;- list(1:5, c(\"a\", \"b\"), c(TRUE, FALSE, TRUE), 2.3))\n\n[[1]]\n[1] 1 2 3 4 5\n\n[[2]]\n[1] \"a\" \"b\"\n\n[[3]]\n[1]  TRUE FALSE  TRUE\n\n[[4]]\n[1] 2.3\n\n\n\nstr(lis1)\n\nList of 4\n $ : int [1:5] 1 2 3 4 5\n $ : chr [1:2] \"a\" \"b\"\n $ : logi [1:3] TRUE FALSE TRUE\n $ : num 2.3\n\ntypeof(lis1)\n\n[1] \"list\"\n\nis.list(lis1)\n\n[1] TRUE\n\n\nComponents are usually named:\n\npatient &lt;- list(id      = \"P042\",\n                age     = 71,\n                group   = \"MCI\",\n                scores  = c(moca = 24, stroop = 118))\nstr(patient)\n\nList of 4\n $ id    : chr \"P042\"\n $ age   : num 71\n $ group : chr \"MCI\"\n $ scores: Named num [1:2] 24 118\n  ..- attr(*, \"names\")= chr [1:2] \"moca\" \"stroop\"\n\n\nA list can contain a list, which makes it a recursive object — and is how every complicated thing in R is built.\n\n\n\n\n\n\nWarningBeware the relation between c() and lists\n\n\n\n\nlis2 &lt;- list(list(1, \"a\"), c(TRUE, FALSE))    # a list of 2\nlis3 &lt;- c(list(1, \"a\"), c(TRUE, FALSE))       # a list of 4\n\nlength(lis2); length(lis3)\n\n[1] 2\n\n\n[1] 4\n\n\nlist() nests. c() flattens one level. They look almost identical and do different things.",
+    "objectID": "sessions/04-working-with-data/index.html#rows-and-columns",
+    "href": "sessions/04-working-with-data/index.html#rows-and-columns",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Rows and columns",
+    "text": "Rows and columns\nInside [ ], what comes before the comma chooses rows and what comes after it chooses columns.\n\nmemclinic[1:3, ]                                # first three people\n\n\n  \n\n\nmemclinic[memclinic$group == \"AD\", ][1:3, ]     # the AD patients\n\n\n  \n\n\nhead(memclinic[, c(\"id\", \"group\", \"moca\")], 3)  # three columns\n\n\n  \n\n\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\nAsking for one column with a comma gives you a vector; asking for two gives you a data frame.\n\nclass(memclinic[memclinic$group == \"AD\", \"moca\"])\n\n[1] \"integer\"\n\nclass(memclinic[memclinic$group == \"AD\", c(\"id\", \"moca\")])\n\n[1] \"data.frame\"\n\n\nThis catches people when a function suddenly complains that it was given a vector where it wanted a table.\n\n\nsubset() says the same thing more readably:\n\nsevere &lt;- subset(memclinic, group == \"AD\" & moca &lt; 20)\nnrow(severe)\n\n[1] 36\n\n\nNote it takes bare column names, with no memclinic$. It is a convenience for interactive work; inside your own functions it can behave unexpectedly, so the [ ] form is the safer habit.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#subsetting-a-list",
-    "href": "sessions/03-lists-dataframes-functions/index.html#subsetting-a-list",
-    "title": "3 · Lists, data frames, control flow, functions",
-    "section": "Subsetting a list — [, [[, $",
-    "text": "Subsetting a list — [, [[, $\nThis is the single most confusing thing about lists, and it is worth ten minutes now to save an hour later.\n\npatient[\"age\"]      # SINGLE bracket: a LIST containing age\n\n$age\n[1] 71\n\npatient[[\"age\"]]    # DOUBLE bracket: the value itself\n\n[1] 71\n\npatient$age         # the same as [[ ]], for a named component\n\n[1] 71\n\n\n\nclass(patient[\"age\"])\n\n[1] \"list\"\n\nclass(patient[[\"age\"]])\n\n[1] \"numeric\"\n\n\n[ keeps the container, [[ opens it. The usual image: a list is a train of carriages, [ gives you a shorter train, [[ gives you what is inside one carriage.\n\npatient[c(\"id\", \"group\")]    # several components: still a list\n\n$id\n[1] \"P042\"\n\n$group\n[1] \"MCI\"\n\npatient[-1]                  # drop the first component\n\n$age\n[1] 71\n\n$group\n[1] \"MCI\"\n\n$scores\n  moca stroop \n    24    118 \n\npatient[[\"scores\"]][\"moca\"]  # into a component, then inside it\n\nmoca \n  24 \n\npatient$scores[\"moca\"]       # the same\n\nmoca \n  24 \n\n\nunlist() flattens the whole thing to a vector — note the coercion:\n\nunlist(patient)\n\n           id           age         group   scores.moca scores.stroop \n       \"P042\"          \"71\"         \"MCI\"          \"24\"         \"118\"",
+    "objectID": "sessions/04-working-with-data/index.html#sorting",
+    "href": "sessions/04-working-with-data/index.html#sorting",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Sorting",
+    "text": "Sorting\norder() returns the positions that would put a vector in order, and you feed those back in as row numbers.\n\nsmallest &lt;- memclinic[order(memclinic$hippo_vol_mm3), ]\nhead(smallest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 3)\n\n\n  \n\n\nlargest &lt;- memclinic[order(-memclinic$hippo_vol_mm3), ]\nhead(largest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 3)\n\n\n  \n\n\n\n(sort() sorts a single vector; order() is what you need to reorder a whole table.)",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#data-frames-are-lists",
-    "href": "sessions/03-lists-dataframes-functions/index.html#data-frames-are-lists",
-    "title": "3 · Lists, data frames, control flow, functions",
-    "section": "Data frames are lists",
-    "text": "Data frames are lists\n\nMatrices are built on top of vectors with a dim attribute. Factors are built on top of vectors with class and levels. Dataframes are built on top of lists.\n\nA data frame is a named list of vectors, all of the same length, with three attributes: names, class, and row.names.\n\nage   &lt;- c(72, 68, 81, 74, 69)\nsex   &lt;- c(\"M\", \"F\", \"F\", \"M\", \"F\")\ngroup &lt;- c(\"HC\", \"MCI\", \"AD\", \"HC\", \"MCI\")\n\n(df1 &lt;- data.frame(age = age, sex = sex, group = group))\n\n\n  \n\n\n\n\nstr(df1)\n\n'data.frame':   5 obs. of  3 variables:\n $ age  : num  72 68 81 74 69\n $ sex  : chr  \"M\" \"F\" \"F\" \"M\" ...\n $ group: chr  \"HC\" \"MCI\" \"AD\" \"HC\" ...\n\nattributes(df1)\n\n$names\n[1] \"age\"   \"sex\"   \"group\"\n\n$class\n[1] \"data.frame\"\n\n$row.names\n[1] 1 2 3 4 5\n\ntypeof(df1)      # a list!\n\n[1] \"list\"\n\nclass(df1)       # ... labelled data.frame\n\n[1] \"data.frame\"\n\n\nWhich means all the list subsetting you just learned applies:\n\nlength(df1)      # the number of COLUMNS\n\n[1] 3\n\ndf1[1]           # a data frame with one column\n\n\n  \n\n\ndf1[[1]]         # the column itself, as a vector\n\n[1] 72 68 81 74 69\n\ndf1$age          # the same\n\n[1] 72 68 81 74 69\n\n\nBut a data frame also has the properties of a matrix, so [row, column] works too:\n\ndim(df1); nrow(df1); ncol(df1)\n\n[1] 5 3\n\n\n[1] 5\n\n\n[1] 3\n\ncolnames(df1)\n\n[1] \"age\"   \"sex\"   \"group\"\n\ndf1[2, ]          # second row\n\n\n  \n\n\ndf1[, \"age\"]      # the age column\n\n[1] 72 68 81 74 69\n\ndf1[2, \"age\"]     # one cell\n\n[1] 68\n\n\nThat double nature — list and matrix at once — is what makes a data frame the right object for a dataset.\n\n\n\n\n\n\nWarningstringsAsFactors\n\n\n\n\nis.factor(df1$sex)\n\n[1] FALSE\n\n\nSince R 4.0.0 text columns stay as text. Older code and older textbooks assume the opposite. Convert explicitly when you need a factor.\n\n\n\nsummary() behaves differently on factors\n\nsummary(df1)\n\n      age           sex               group          \n Min.   :68.0   Length:5           Length:5          \n 1st Qu.:69.0   Class :character   Class :character  \n Median :72.0   Mode  :character   Mode  :character  \n Mean   :72.8                                        \n 3rd Qu.:74.0                                        \n Max.   :81.0                                        \n\n\nsex and group report Length / Class / Mode, which tells you nothing. Turn them into factors and the same call counts them:\n\ndf1_F &lt;- as.data.frame(unclass(df1), stringsAsFactors = TRUE)\nsummary(df1_F)\n\n      age       sex   group  \n Min.   :68.0   F:3   AD :1  \n 1st Qu.:69.0   M:2   HC :2  \n Median :72.0         MCI:2  \n Mean   :72.8                \n 3rd Qu.:74.0                \n Max.   :81.0                \n\n\n\n\nAdding columns and combining frames\n\ndf1$moca &lt;- c(29, 24, 17, 28, 25)\ndf1$age_z &lt;- with(df1, scale(age))    # with() saves repeating df1$\nstr(df1)\n\n'data.frame':   5 obs. of  5 variables:\n $ age  : num  72 68 81 74 69\n $ sex  : chr  \"M\" \"F\" \"F\" \"M\" ...\n $ group: chr  \"HC\" \"MCI\" \"AD\" \"HC\" ...\n $ moca : num  29 24 17 28 25\n $ age_z: num [1:5, 1] -0.155 -0.929 1.587 0.232 -0.735\n  ..- attr(*, \"scaled:center\")= num 72.8\n  ..- attr(*, \"scaled:scale\")= num 5.17\n\n\n\nextra &lt;- data.frame(age = 77, sex = \"F\", group = \"AD\", moca = 19, age_z = NA)\nrbind(df1, extra)                     # add rows\n\n\n  \n\n\nids &lt;- data.frame(row = 1:5, site = c(\"PD\", \"PD\", \"VR\", \"PD\", \"VR\"))\nhead(cbind(df1, site = ids$site), 3)  # add columns\n\n\n  \n\n\n\nmerge() joins two frames on a shared key, and is covered properly in practical 4.",
+    "objectID": "sessions/04-working-with-data/index.html#making-new-variables",
+    "href": "sessions/04-working-with-data/index.html#making-new-variables",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Making new variables",
+    "text": "Making new variables\nifelse() works through a vector and returns one of two values for each element.\n\nmemclinic$screen &lt;- ifelse(memclinic$moca &lt; 26, \"below cut-off\", \"normal\")\ntable(memclinic$screen)\n\n\nbelow cut-off        normal \n           97            83 \n\n\nFor more than two outcomes, nested ifelse() becomes unreadable. The professor’s tool for this is case_when():\n\nmemclinic$severity &lt;- dplyr::case_when(\n  memclinic$moca &gt;= 26 ~ \"normal\",\n  memclinic$moca &gt;= 20 ~ \"mild\",\n  TRUE                 ~ \"moderate-severe\"\n)\ntable(memclinic$severity)\n\n\n           mild moderate-severe          normal \n             61              36              83 \n\n\nConditions are checked in the order you write them, and the first match wins — which is why &gt;= 26 has to come before &gt;= 20. The final TRUE is the catch-all.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#tibbles",
-    "href": "sessions/03-lists-dataframes-functions/index.html#tibbles",
-    "title": "3 · Lists, data frames, control flow, functions",
-    "section": "Tibbles",
-    "text": "Tibbles\nA tibble is a modern data frame from the tidyverse, which drops some of the older idiosyncrasies and prints more helpfully — it borrows the type information from str() and puts it in the printout.\n\n(tib0 &lt;- tibble::tibble(x    = 1:3,\n                        y    = 1,\n                        z    = x^2 + y,\n                        name = letters[1:3]))\n\n\n  \n\n\n\n\nclass(tib0)\n\n[1] \"tbl_df\"     \"tbl\"        \"data.frame\"\n\ntibble::is_tibble(tib0)\n\n[1] TRUE\n\n\nNote y = 1 was recycled, and z could be defined using x and y in the same call — neither works in data.frame(). A tibble is still a data frame: [, [[ and $ all behave as you expect.",
+    "objectID": "sessions/04-working-with-data/index.html#factors-and-why-their-order-matters",
+    "href": "sessions/04-working-with-data/index.html#factors-and-why-their-order-matters",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Factors, and why their order matters",
+    "text": "Factors, and why their order matters\nIn practical 2 you saw that group arrives as text, and that making it a factor sorts the levels alphabetically:\n\nlevels(factor(memclinic$group))\n\n[1] \"AD\"  \"HC\"  \"MCI\"\n\n\nAD first. That is not how anyone would present these groups, and it is not harmless, because the first level becomes the baseline that everything else is compared against.\n\ncoef(lm(moca ~ factor(group), data = memclinic))\n\n     (Intercept)  factor(group)HC factor(group)MCI \n        19.18333          9.20000          6.00000 \n\n\nThe intercept, 19.18, is the AD mean. Now set the order deliberately:\n\nmemclinic$group &lt;- factor(memclinic$group, levels = c(\"HC\", \"MCI\", \"AD\"))\nlevels(memclinic$group)\n\n[1] \"HC\"  \"MCI\" \"AD\" \n\ncoef(lm(moca ~ group, data = memclinic))\n\n(Intercept)    groupMCI     groupAD \n   28.38333    -3.20000    -9.20000 \n\n\nThe intercept is now 28.38, the HC mean, and the other two numbers are the MCI and AD deficits relative to healthy controls — which is what a clinical reader expects. Same data, same model, every number different.\n\ncontrasts(memclinic$group)\n\n    MCI AD\nHC    0  0\nMCI   1  0\nAD    0  1\n\n\nThat matrix is what R actually put into the model. Practical 6 is about nothing else.\nrelevel() moves one level to the front without retyping them all:\n\nlevels(relevel(memclinic$group, ref = \"AD\"))\n\n[1] \"AD\"  \"HC\"  \"MCI\"",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#control-flow",
-    "href": "sessions/03-lists-dataframes-functions/index.html#control-flow",
-    "title": "3 · Lists, data frames, control flow, functions",
-    "section": "Control flow",
-    "text": "Control flow\n\nChoices\n\nscore &lt;- 24\nif (score &lt; 26) {\n  print(\"below the screening cut-off\")\n} else {\n  print(\"within normal limits\")\n}\n\n[1] \"below the screening cut-off\"\n\n\nif() takes one condition. For a whole vector, use the vectorised ifelse():\n\nx &lt;- 1:8\nifelse(x %% 2 == 0, \"even\", \"odd\")\n\n[1] \"odd\"  \"even\" \"odd\"  \"even\" \"odd\"  \"even\" \"odd\"  \"even\"\n\n\n\nmoca &lt;- c(29, 24, 18, 27)\ndplyr::case_when(\n  moca &gt;= 26 ~ \"normal\",\n  moca &gt;= 20 ~ \"mild\",\n  TRUE       ~ \"moderate-severe\"\n)\n\n[1] \"normal\"          \"mild\"            \"moderate-severe\" \"normal\"         \n\n\ncase_when() replaces nested ifelse(). The conditions are evaluated in the order you write them, and the first match wins, so &gt;= 26 must come before &gt;= 20. The final TRUE is the catch-all.\n\n\nLoops\n\nfor (i in 1:4) print(i)\n\n[1] 1\n[1] 2\n[1] 3\n[1] 4\n\n\n\nfor (g in c(\"HC\", \"MCI\", \"AD\")) {\n  cat(g, \"\\n\")\n}\n\nHC \nMCI \nAD \n\n\nnext skips to the next iteration, break leaves the loop:\n\nfor (i in 1:10) {\n  if (i &lt; 2) next\n  if (i &gt; 6) break\n  cat(i, \"\")\n}\n\n2 3 4 5 6 \n\n\n\nx &lt;- 0\nwhile (x &lt; 4) { x &lt;- x + 1 }\nx\n\n[1] 4\n\nx &lt;- 0\nrepeat { x &lt;- x + 1; if (x == 4) break }\nx\n\n[1] 4\n\n\nwhile tests the condition before each pass, repeat runs until you break out. There is no do-while statement in R.\n\n\n\n\n\n\nWarningPitfalls in loops\n\n\n\n\nPreallocate — growing a vector each pass makes R copy it each time.\nLoops can strip attributes from vectors.\nVectorise rather than nesting loops.\n1:length(x) fails on an empty vector. Use seq_along(x):\n\n\nx &lt;- numeric(0)\n1:length(x)      # counts DOWN from 1 to 0 -- two iterations on nothing\n\n[1] 1 0\n\nseq_along(x)     # empty, as it should be\n\ninteger(0)",
+    "objectID": "sessions/04-working-with-data/index.html#counting",
+    "href": "sessions/04-working-with-data/index.html#counting",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Counting",
+    "text": "Counting\n\ntable(memclinic$group)\n\n\n HC MCI  AD \n 60  60  60 \n\ntable(memclinic$group, memclinic$sex)\n\n     \n       F  M\n  HC  35 25\n  MCI 35 25\n  AD  33 27\n\nround(prop.table(table(memclinic$group, memclinic$screen), 1), 2)\n\n     \n      below cut-off normal\n  HC           0.05   0.95\n  MCI          0.57   0.43\n  AD           1.00   0.00\n\n\nprop.table(..., 1) turns counts into proportions within each row, so each row sums to 1.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#functions",
-    "href": "sessions/03-lists-dataframes-functions/index.html#functions",
-    "title": "3 · Lists, data frames, control flow, functions",
-    "section": "Functions",
-    "text": "Functions\nIn data analysis, functions are how you call statistical methods — and they typically return a list holding both results and details.\n\nttestex &lt;- t.test(1:100, mu = 70)\nclass(ttestex)\n\n[1] \"htest\"\n\nnames(ttestex)\n\n [1] \"statistic\"   \"parameter\"   \"p.value\"     \"conf.int\"    \"estimate\"   \n [6] \"null.value\"  \"stderr\"      \"alternative\" \"method\"      \"data.name\"  \n\n\n\nttestex$p.value\n\n[1] 1.159984e-09\n\nttestex$conf.int\n\n[1] 44.74349 56.25651\nattr(,\"conf.level\")\n[1] 0.95\n\n\nEverything printed in a test result is a component you can pull out by name — which is how you put a number into a report without retyping it.\nThe same is true of a fitted model:\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\nfit &lt;- lm(stroop_cost_ms ~ hippo_vol_mm3, data = memclinic)\n\nclass(fit)\n\n[1] \"lm\"\n\nnames(fit)[1:6]\n\n[1] \"coefficients\"  \"residuals\"     \"effects\"       \"rank\"         \n[5] \"fitted.values\" \"assign\"       \n\nfit$coefficients\n\n  (Intercept) hippo_vol_mm3 \n  339.5534002    -0.0641034 \n\n\nclass() is \"lm\", and that label is the whole reason summary(fit) prints a regression table rather than dumping a list. What that table means is the subject of the Regression 1 lecture.\n\nWriting your own\n\nhypo &lt;- function(a, b) {\n  c = sqrt(a^2 + b^2)\n  return(c)\n}\n\nhypo(3, 4)\n\n[1] 5\n\nhypo(a = 3, b = 4)\n\n[1] 5\n\n\nNotice the assignment discipline: &lt;- binds the function to the name, = names arguments at the call site.\nA function has three parts:\n\nformals(hypo)      # its arguments\n\n$a\n\n\n$b\n\nbody(hypo)         # what it does\n\n{\n    c = sqrt(a^2 + b^2)\n    return(c)\n}\n\n\nArguments can have defaults, and the last expression is returned even without return():\n\nz_score &lt;- function(x, na.rm = TRUE) {\n  (x - mean(x, na.rm = na.rm)) / sd(x, na.rm = na.rm)\n}\n\nround(z_score(c(24, 26, 28, 30, 22)), 2)\n\n[1] -0.63  0.00  0.63  1.26 -1.26\n\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\nBe careful with arguments and their position.\n\nsum(2, 3, 10)\n\n[1] 15\n\nmean(2, 3, 10)\n\n[1] 2\n\nargs(mean)\n\nfunction (x, ...) \nNULL\n\n\nsum() adds everything it is given. mean() takes one vector as its first argument, so mean(2, 3, 10) returns the mean of 2 — and silently ignores the rest. What you meant was mean(c(2, 3, 10)).\n\n\n\nf &lt;- function() { hidden &lt;- 99; hidden }\nf()\n\n[1] 99\n\nexists(\"hidden\")\n\n[1] FALSE\n\n\nWhat happens in the function stays in the function.",
+    "objectID": "sessions/04-working-with-data/index.html#summarising-by-group",
+    "href": "sessions/04-working-with-data/index.html#summarising-by-group",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Summarising by group",
+    "text": "Summarising by group\n\ntapply(memclinic$moca, memclinic$group, mean)\n\n      HC      MCI       AD \n28.38333 25.18333 19.18333 \n\n\naggregate() does the same with a formula, and handles several variables at once:\n\naggregate(moca ~ group, data = memclinic, FUN = mean)\n\n\n  \n\n\naggregate(cbind(hippo_vol_mm3, csf_ptau) ~ group, data = memclinic, FUN = mean)\n\n\n  \n\n\n\nwith() saves repeating the data frame name:\n\nwith(memclinic, tapply(hippo_vol_mm3, group, median))\n\n    HC    MCI     AD \n3855.0 3489.0 3111.5 \n\n\nThe psych package gives a fuller description, including skewness:\n\npsych::describe(memclinic[, c(\"moca\", \"hippo_vol_mm3\", \"csf_ptau\")])\n\n\n  \n\n\n\n\n\n\n\n\n\nWarning\n\n\n\nSelect the columns you want first. psych::describe(memclinic) will happily report a mean for id and group, marking them with a * — a number that means nothing. This is why the course scripts write psych::describe(memclinic[, c(\"hippo_vol_mm3\", \"stroop_cost_ms\")]) instead.\n\n\nLook at skew for csf_ptau: strongly positive, so the distribution has a long right tail and its mean sits well above its median. The next section makes that visible.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#exercises",
-    "href": "sessions/03-lists-dataframes-functions/index.html#exercises",
-    "title": "3 · Lists, data frames, control flow, functions",
+    "objectID": "sessions/04-working-with-data/index.html#drawing-the-data",
+    "href": "sessions/04-working-with-data/index.html#drawing-the-data",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Drawing the data",
+    "text": "Drawing the data\n\nOne variable: a histogram\n\nhist(memclinic$csf_ptau,\n     breaks = 20,\n     main   = \"CSF phosphorylated tau\",\n     xlab   = \"p-tau (pg/mL)\")\n\n\n\n\n\n\n\n\nThere is the skew from the table above.\n\n\nOne variable per group: a boxplot\n\nboxplot(moca ~ group, data = memclinic,\n        xlab = \"Diagnosis\",\n        ylab = \"MoCA score\")\n\n\n\n\n\n\n\n\nThe groups come out in clinical order because we fixed the factor levels earlier. Had we not, this plot would read AD, HC, MCI.\n\n\nTwo variables: a scatterplot\n\nplot(memclinic$hippo_vol_mm3, memclinic$stroop_cost_ms,\n     pch  = 16,\n     col  = \"grey40\",\n     xlab = \"Hippocampal volume (mm³)\",\n     ylab = \"Stroop interference cost (ms)\")\n\nabline(lm(stroop_cost_ms ~ hippo_vol_mm3, data = memclinic), col = \"blue\")\n\n\n\n\n\n\n\n\nThat abline(lm(...)) line has already fitted a regression — the kind of model the Regression 1 lecture is about.\n\n\n\n\n\n\nTipLabel your axes\n\n\n\nxlab and ylab are not decoration. No plot should leave this room with memclinic$moca written along an axis.\n\n\n\n\nSeveral plots at once\npar(mfrow = c(rows, columns)) splits the plotting area into a grid.\n\npar(mfrow = c(2, 2))\nhist(memclinic$age,  main = \"Age\",  xlab = \"years\")\nhist(memclinic$moca, main = \"MoCA\", xlab = \"score\")\nboxplot(hippo_vol_mm3 ~ group, data = memclinic, ylab = \"Hippocampal volume\")\nplot(memclinic$age, memclinic$hippo_vol_mm3,\n     xlab = \"Age\", ylab = \"Hippocampal volume\")\n\n\n\n\n\n\n\npar(mfrow = c(1, 1))     # always put it back\n\nPractical 5 opens with par(mfrow = c(2, 2)); plot(m1) to get four diagnostic plots in one figure. This is why.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#wide-and-long",
+    "href": "sessions/04-working-with-data/index.html#wide-and-long",
+    "title": "4 · Working with data, and drawing it",
+    "section": "Wide and long",
+    "text": "Wide and long\nOur second file has one row per person and three reaction-time columns:\n\nstroop &lt;- read.csv(\"data/stroop-rm.csv\")\nhead(stroop, 3)\n\n\n  \n\n\nnrow(stroop)\n\n[1] 36\n\n\nThat is wide format. Most modelling functions want long format: one row per observation, with a column saying which condition it came from. You could build it by hand with what you already know:\n\nlong_manual &lt;- rbind(\n  data.frame(id = stroop$id, condition = \"congruent\",   rt = stroop$rt_congruent),\n  data.frame(id = stroop$id, condition = \"neutral\",     rt = stroop$rt_neutral),\n  data.frame(id = stroop$id, condition = \"incongruent\", rt = stroop$rt_incongruent)\n)\nnrow(long_manual)\n\n[1] 108\n\nhead(long_manual, 3)\n\n\n  \n\n\n\n36 people × 3 conditions = 108 rows. reshape() does it in one call:\n\nlong &lt;- reshape(stroop,\n                direction = \"long\",\n                varying   = c(\"rt_congruent\", \"rt_neutral\", \"rt_incongruent\"),\n                v.names   = \"rt\",\n                timevar   = \"condition\",\n                times     = c(\"congruent\", \"neutral\", \"incongruent\"),\n                idvar     = \"id\")\nrownames(long) &lt;- NULL\nhead(long, 3)\n\n\n  \n\n\nnrow(long)\n\n[1] 108\n\n\n\n\n\n\n\n\nTip\n\n\n\nreshape() is the least friendly function in base R. Nobody memorises its arguments — copy this call and change the names. (tidyr::pivot_longer() is the modern alternative; the appendix shows it.)\n\n\n\nJoining the two files\nstroop-rm.csv has no group column, on purpose. merge() attaches it from the cohort file, matching on id:\n\nlong &lt;- merge(long, memclinic[, c(\"id\", \"group\", \"age\")], by = \"id\")\nhead(long, 3)\n\n\n  \n\n\ntapply(long$rt, long$condition, mean)\n\n  congruent incongruent     neutral \n   423.9167    542.8889    452.8889 \n\n\nReaction time rises from congruent to neutral to incongruent — the Stroop effect.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#the-other-way-to-draw-this",
+    "href": "sessions/04-working-with-data/index.html#the-other-way-to-draw-this",
+    "title": "4 · Working with data, and drawing it",
+    "section": "The other way to draw this",
+    "text": "The other way to draw this\nEvery regression script in this course uses ggplot2, so it is worth seeing the same picture in both dialects. The professor’s own comment in Regression1.R is “better graphic facilities with ggplot package”.\n\nlibrary(ggplot2)      # notice the masking message\n\nggplot(memclinic, aes(x = hippo_vol_mm3, y = stroop_cost_ms)) +\n  geom_point(alpha = .6) +\n  geom_smooth(method = \"lm\", se = FALSE) +\n  labs(x = \"Hippocampal volume (mm³)\",\n       y = \"Stroop interference cost (ms)\")\n\n\n\n\n\n\n\n\nThree ideas and that is enough for now: aes() says which variable maps to which part of the picture, each geom_ adds a layer, and layers are joined with +. You do not need it here, but every regression script in the course uses it, so it is worth having seen once.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "4 · Working with data, and drawing it"
+    ]
+  },
+  {
+    "objectID": "sessions/04-working-with-data/index.html#exercises",
+    "href": "sessions/04-working-with-data/index.html#exercises",
+    "title": "4 · Working with data, and drawing it",
     "section": "Exercises",
-    "text": "Exercises\n\nExercise 1 — a list, and the three brackets\n\n\nsession &lt;- list(\n  id        = \"P042\",\n  visit     = ___,\n  scores    = c(moca = 24, stroop = 118, rt = 455),\n  complete  = TRUE\n)\n\nstr(session)\n\nsession[\"scores\"]        # what class is this?\nsession[[\"scores\"]]      # and this?\nclass(session[___])\nclass(session[[___]])\n\nsession$scores[\"moca\"]   # reach inside the component\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsession &lt;- list(\n  id       = \"P042\",\n  visit    = 2,\n  scores   = c(moca = 24, stroop = 118, rt = 455),\n  complete = TRUE\n)\n\nstr(session)\n\nList of 4\n $ id      : chr \"P042\"\n $ visit   : num 2\n $ scores  : Named num [1:3] 24 118 455\n  ..- attr(*, \"names\")= chr [1:3] \"moca\" \"stroop\" \"rt\"\n $ complete: logi TRUE\n\nsession[\"scores\"]\n\n$scores\n  moca stroop     rt \n    24    118    455 \n\nsession[[\"scores\"]]\n\n  moca stroop     rt \n    24    118    455 \n\nclass(session[\"scores\"])\n\n[1] \"list\"\n\nclass(session[[\"scores\"]])\n\n[1] \"numeric\"\n\nsession$scores[\"moca\"]\n\nmoca \n  24 \n\n\n[ returns a list of length one that contains the scores; [[ returns the named numeric vector itself. That is why class() says list for one and numeric for the other.\nIt matters because a function expecting a vector will fail on session[\"scores\"] with a message about the wrong type, and the two lines look nearly identical on screen.\n\n\n\n\n\nExercise 2 — a data frame is a list\n\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\ntypeof(memclinic)      # what is it made of?\nclass(memclinic)       # what is it labelled as?\nlength(memclinic)      # rows or columns?\nnrow(memclinic)\n\n# The same column, three ways\nhead(memclinic[[\"moca\"]], 3)\nhead(memclinic$___, 3)\nhead(memclinic[, \"___\"], 3)\n\n# And the container version\nclass(memclinic[\"moca\"])\nclass(memclinic[[\"moca\"]])\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\ntypeof(memclinic)\n\n[1] \"list\"\n\nclass(memclinic)\n\n[1] \"data.frame\"\n\nlength(memclinic)\n\n[1] 10\n\nnrow(memclinic)\n\n[1] 180\n\nhead(memclinic[[\"moca\"]], 3)\n\n[1] 30 24 28\n\nhead(memclinic$moca, 3)\n\n[1] 30 24 28\n\nhead(memclinic[, \"moca\"], 3)\n\n[1] 30 24 28\n\nclass(memclinic[\"moca\"])\n\n[1] \"data.frame\"\n\nclass(memclinic[[\"moca\"]])\n\n[1] \"integer\"\n\n\ntypeof() says list and class() says data.frame: underneath it is a list of ten equal-length vectors, wearing a label that makes R print it as a table.\nlength() is 10, not 180 — the number of components, i.e. columns. For rows you need nrow(). This catches people constantly.\nThe three ways of getting moca are identical. But memclinic[\"moca\"] with a single bracket gives a one-column data frame, not a vector.\n\n\n\n\n\nExercise 3 — recoding with control flow\n\n\n# A binary flag with the vectorised if\nmemclinic$flag &lt;- ifelse(memclinic$moca &lt; ___, \"positive\", \"negative\")\ntable(memclinic$flag)\n\n# Three categories, first match wins\nmemclinic$severity &lt;- dplyr::case_when(\n  memclinic$moca &gt;= 26 ~ \"___\",\n  memclinic$moca &gt;= 20 ~ \"___\",\n  TRUE                 ~ \"moderate-severe\"\n)\ntable(memclinic$severity)\n\n# Why would putting the &gt;= 20 line first be wrong?\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nmemclinic$flag &lt;- ifelse(memclinic$moca &lt; 26, \"positive\", \"negative\")\ntable(memclinic$flag)\n\n\nnegative positive \n      83       97 \n\nmemclinic$severity &lt;- dplyr::case_when(\n  memclinic$moca &gt;= 26 ~ \"normal\",\n  memclinic$moca &gt;= 20 ~ \"mild\",\n  TRUE                 ~ \"moderate-severe\"\n)\ntable(memclinic$severity)\n\n\n           mild moderate-severe          normal \n             61              36              83 \n\n\nIf &gt;= 20 came first, everyone scoring 26 or more would also satisfy it, and because the first matching condition wins they would all be labelled “mild”. The normal group would vanish — and, once again, with no error.\nConditions in case_when() have to run from the most specific to the most general.\n\n\n\n\n\nExercise 4 — write a function\nWrite a function that takes a vector of scores and returns how many fall below a cut-off, with the cut-off as an argument that defaults to 26.\n\n\nn_below &lt;- function(x, cutoff = ___) {\n  sum(x &lt; cutoff, na.rm = TRUE)\n}\n\nn_below(memclinic$moca)\nn_below(memclinic$moca, cutoff = ___)\n\nformals(n_below)\n\n# Now break it on purpose: what does this give, and why?\nmean(24, 26, 28)\nmean(c(24, 26, 28))\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nn_below &lt;- function(x, cutoff = 26) {\n  sum(x &lt; cutoff, na.rm = TRUE)\n}\n\nn_below(memclinic$moca)\n\n[1] 97\n\nn_below(memclinic$moca, cutoff = 20)\n\n[1] 36\n\nformals(n_below)\n\n$x\n\n\n$cutoff\n[1] 26\n\nmean(24, 26, 28)\n\n[1] 24\n\nmean(c(24, 26, 28))\n\n[1] 26\n\n\n97 people score below 26 and 46 below 20. The default means the common case needs no second argument, while the cut-off is still there when you want it.\nmean(24, 26, 28) returns 24. mean()’s first argument is the whole vector, and the others are matched to trim and na.rm — so it averaged a single number and ignored the rest without complaint. mean(c(24, 26, 28)) returns 26, which is what was meant.",
+    "text": "Exercises\n\nExercise 1 — find the extreme cases\nPull out the most impaired patients, then look at the extremes of hippocampal volume across the whole cohort.\n\n\nsevere &lt;- subset(memclinic, group == \"___\" & moca &lt; ___)\nnrow(severe)\n\nsevere[order(severe$___), c(\"id\", \"moca\", \"hippo_vol_mm3\")]\n\nbiggest &lt;- memclinic[order(-memclinic$hippo_vol_mm3), ]\nhead(biggest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 5)\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsevere &lt;- subset(memclinic, group == \"AD\" & moca &lt; 20)\nnrow(severe)\n\n[1] 36\n\nsevere[order(severe$moca), c(\"id\", \"moca\", \"hippo_vol_mm3\")]\n\n\n  \n\n\nbiggest &lt;- memclinic[order(-memclinic$hippo_vol_mm3), ]\nhead(biggest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 5)\n\n\n  \n\n\n\nThe people with the largest hippocampal volumes are controls and the smallest tend to be AD patients — but the lists are not pure. The groups overlap, which is exactly why the boxplots overlap too, and why no single measurement diagnoses anyone.\n\n\n\n\n\nExercise 2 — a clinical flag, and the reference level\nCreate a screening flag, then put the factor levels in clinical order and look at what happens to the model.\n\n\nmemclinic$flag &lt;- ifelse(memclinic$moca &lt; 26, \"___\", \"___\")\ntable(memclinic$flag, memclinic$group)\n\nmemclinic$group &lt;- factor(memclinic$group,\n                          levels = c(\"___\", \"___\", \"___\"))\nlevels(memclinic$group)\n\ncoef(lm(moca ~ group, data = memclinic))\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nmemclinic$flag &lt;- ifelse(memclinic$moca &lt; 26, \"screen positive\", \"screen negative\")\ntable(memclinic$flag, memclinic$group)\n\n                 \n                  HC MCI AD\n  screen negative 57  26  0\n  screen positive  3  34 60\n\nmemclinic$group &lt;- factor(memclinic$group, levels = c(\"HC\", \"MCI\", \"AD\"))\nlevels(memclinic$group)\n\n[1] \"HC\"  \"MCI\" \"AD\" \n\ncoef(lm(moca ~ group, data = memclinic))\n\n(Intercept)    groupMCI     groupAD \n   28.38333    -3.20000    -9.20000 \n\n\nAlmost every AD patient screens positive, most MCI patients do, and a minority of controls do — which is what a screening instrument with a cut-off looks like.\nThe model is the more important half. The intercept, 28.38, is the mean MoCA of the reference group, now HC. groupMCI of −3.20 and groupAD of −9.20 are the amounts by which those groups fall below it.\nThis is the whole of practical 6 in four lines: a comparison between groups is a regression on a factor, and which group the intercept describes is entirely up to the order of the levels.\n\n\n\n\n\nExercise 3 — summarise by group\n\n\ntapply(memclinic$hippo_vol_mm3, memclinic$___, mean)\n\naggregate(cbind(hippo_vol_mm3, csf_ptau) ~ ___, data = memclinic, FUN = ___)\n\npsych::describe(memclinic[, c(\"___\", \"___\")])\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\ntapply(memclinic$hippo_vol_mm3, memclinic$group, mean)\n\n      HC      MCI       AD \n3865.400 3481.233 3108.250 \n\naggregate(cbind(hippo_vol_mm3, csf_ptau) ~ group, data = memclinic, FUN = mean)\n\n\n  \n\n\npsych::describe(memclinic[, c(\"hippo_vol_mm3\", \"csf_ptau\")])\n\n\n  \n\n\n\nBoth measures change steadily across the groups, in opposite directions: volume falls from HC to AD, p-tau rises.\ndescribe() also shows that csf_ptau has a large positive skew while hippo_vol_mm3 has almost none. That is not an accident of sampling — the codebook records that p-tau was generated from a lognormal distribution, as real assay values are. It matters, because several methods later in the course assume roughly symmetric residuals.\n\n\n\n\n\nExercise 4 — three plots\nDraw a histogram, a boxplot and a scatterplot, each with readable axis labels.\n\n\nhist(memclinic$___,\n     breaks = 20,\n     main   = \"___\",\n     xlab   = \"___\")\n\nboxplot(___ ~ ___, data = memclinic,\n        xlab = \"Diagnosis\",\n        ylab = \"___\")\n\nplot(memclinic$age, memclinic$hippo_vol_mm3,\n     pch  = 16,\n     col  = \"grey40\",\n     xlab = \"___\",\n     ylab = \"___\")\nabline(lm(___ ~ ___, data = memclinic), col = \"blue\")\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nhist(memclinic$rt_mean,\n     breaks = 20,\n     main   = \"Mean simple reaction time\",\n     xlab   = \"RT (ms)\")\n\n\n\n\n\n\n\nboxplot(moca ~ group, data = memclinic,\n        xlab = \"Diagnosis\",\n        ylab = \"MoCA score\")\n\n\n\n\n\n\n\nplot(memclinic$age, memclinic$hippo_vol_mm3,\n     pch  = 16,\n     col  = \"grey40\",\n     xlab = \"Age (years)\",\n     ylab = \"Hippocampal volume (mm³)\")\nabline(lm(hippo_vol_mm3 ~ age, data = memclinic), col = \"blue\")\n\n\n\n\n\n\n\n\nThe boxplots run HC, MCI, AD because of Exercise 2 — with the default alphabetical levels they would have come out AD, HC, MCI.\nThe fitted line on the last plot slopes downward: hippocampal volume falls with age. Estimating that slope properly — it is about −12 mm³ per year — is what lm() does in the Regression 1 lecture.\n\n\n\n\n\nExercise 5 — wide to long\n\n\nstroop &lt;- read.csv(\"data/___.csv\")\nnrow(stroop)\n\nlong &lt;- reshape(stroop,\n                direction = \"long\",\n                varying   = c(\"rt_congruent\", \"rt_neutral\", \"rt_incongruent\"),\n                v.names   = \"rt\",\n                timevar   = \"condition\",\n                times     = c(\"congruent\", \"neutral\", \"incongruent\"),\n                idvar     = \"id\")\nrownames(long) &lt;- NULL\nnrow(long)\n\nlong &lt;- merge(long, memclinic[, c(\"id\", \"group\")], by = \"___\")\ntapply(long$rt, long$condition, ___)\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nstroop &lt;- read.csv(\"data/stroop-rm.csv\")\nnrow(stroop)\n\n[1] 36\n\nlong &lt;- reshape(stroop,\n                direction = \"long\",\n                varying   = c(\"rt_congruent\", \"rt_neutral\", \"rt_incongruent\"),\n                v.names   = \"rt\",\n                timevar   = \"condition\",\n                times     = c(\"congruent\", \"neutral\", \"incongruent\"),\n                idvar     = \"id\")\nrownames(long) &lt;- NULL\nnrow(long)\n\n[1] 108\n\nlong &lt;- merge(long, memclinic[, c(\"id\", \"group\")], by = \"id\")\ntapply(long$rt, long$condition, mean)\n\n  congruent incongruent     neutral \n   423.9167    542.8889    452.8889 \n\n\n36 rows became 108, and the condition means rise from congruent to incongruent.\nThe two files describe the same people, so the interference cost should be recoverable from the reaction times:\n\ncheck &lt;- merge(stroop, memclinic[, c(\"id\", \"stroop_cost_ms\")], by = \"id\")\nrecovered &lt;- check$rt_incongruent - check$rt_congruent\nround(cor(recovered, check$stroop_cost_ms), 3)\n\n[1] 0.973\n\n\nThey correlate about .97 rather than matching exactly, because noise was added to each condition separately — which is what happens when you measure the same quantity twice.\nPractical 6 needs this long shape: a repeated-measures analysis written as aov(rt ~ condition + Error(id/condition)) cannot be expressed against the wide table at all.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#what-to-take-away",
-    "href": "sessions/03-lists-dataframes-functions/index.html#what-to-take-away",
-    "title": "3 · Lists, data frames, control flow, functions",
+    "objectID": "sessions/04-working-with-data/index.html#what-to-take-away",
+    "href": "sessions/04-working-with-data/index.html#what-to-take-away",
+    "title": "4 · Working with data, and drawing it",
     "section": "What to take away",
-    "text": "What to take away\n\n[ keeps the container, [[ and $ open it.\nA data frame is a list of equal-length columns, wearing a class label. length() counts columns; use nrow() for rows.\nif takes one condition; ifelse() and case_when() take a whole vector.\ncase_when() stops at the first match, so order the conditions from specific to general.\nA statistical function returns a list — everything in a printed result can be pulled out by name.\nCheck the argument order of a function before you trust its answer.",
+    "text": "What to take away\n\nIn df[rows, columns], the comma is what separates the two. One column with a comma gives a vector, not a table.\nifelse() for two outcomes, dplyr::case_when() for more, first match wins.\nA factor’s levels are alphabetical unless you set them. The first level is the baseline every model compares against.\ntapply() and aggregate() summarise within groups.\nLabel your axes.\nWide is for reading, long is for modelling.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
-    "objectID": "sessions/03-lists-dataframes-functions/index.html#going-further",
-    "href": "sessions/03-lists-dataframes-functions/index.html#going-further",
-    "title": "3 · Lists, data frames, control flow, functions",
+    "objectID": "sessions/04-working-with-data/index.html#going-further",
+    "href": "sessions/04-working-with-data/index.html#going-further",
+    "title": "4 · Working with data, and drawing it",
     "section": "Going further",
-    "text": "Going further\nThe appendix covers nested lists and purrr::map(), the apply family, seq_along() and loop pitfalls in depth, anonymous functions, pipes, and lexical scoping.",
+    "text": "Going further\nThe appendix for this session covers loops and the apply family, pipes, graphics in more depth including saving figures to file, the other ways to reshape, and how merge() can silently duplicate your rows.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "3 · Lists, data frames, control flow, functions"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html",
-    "href": "sessions/01-r-basics/index.html",
-    "title": "1 · Basics of R",
-    "section": "",
-    "text": "Note⬇ Download this practical\n\n\n\nA zip containing the R script, the data, and an .Rproj file. Unzip it somewhere you can find again, then double-click the .Rproj.\nOptional extra practice alongside Introduction to R — Part 1. It does not replace the lecture, and nothing here is assessed.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#what-you-will-be-able-to-do",
-    "href": "sessions/01-r-basics/index.html#what-you-will-be-able-to-do",
-    "title": "1 · Basics of R",
-    "section": "What you will be able to do",
-    "text": "What you will be able to do\n\nuse R as a calculator, and recognise when floating-point arithmetic has tricked you;\ncreate objects, and say what &lt;- does that = does not;\nfind your way around the help system;\nsee what is in your workspace, and clear it;\nset up a working directory properly, and read a data file from it;\nrun str() on anything and read what it tells you.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#before-you-start",
-    "href": "sessions/01-r-basics/index.html#before-you-start",
-    "title": "1 · Basics of R",
-    "section": "Before you start",
-    "text": "Before you start\n\n\n\n\n\n\nImportantOpen the .Rproj file first\n\n\n\nDouble-click the .Rproj file in this folder before anything else. That sets R’s working directory, which is why nothing here calls setwd().\nIf you later see\ncannot open file 'data/memclinic.csv': No such file or directory\nrun getwd() and list.files(). If there is no data folder in the list, you opened the script instead of the project. Close RStudio and double-click the .Rproj file.\n\n\n\n\n\n\n\n\nImportantRun this script one line at a time — do not press Source\n\n\n\nPut your cursor on a line and press Ctrl+Enter (Cmd+Enter on a Mac).\nDo not press the Source button. R reads the whole file before it runs any of it, and the ___ blanks in the exercises are not valid R until you fill them in. Pressing Source with a blank still in the file gives Error: unexpected input and runs nothing at all.\n\n\n\n\n\n\n\n\nTipTyping the symbols on an Italian keyboard\n\n\n\n\n\n\n\n\n\n\n\n\n\nSymbol\nMac\nWindows\n\n\n\n\n&lt;-\nOption + − (RStudio inserts it for you)\nAlt + −\n\n\n~\nOption + 5\nAltGr + ì\n\n\n[ ]\nOption + è / Option + +\nAltGr + è / AltGr + +\n\n\n{ }\nShift + Option + è / Shift + Option + +\nShift + AltGr + è / +\n\n\n#\nOption + à\nAltGr + à\n\n\n\nUse the copy button in the corner of each grey box rather than selecting text — copying from a browser can turn \" into \", which R will not accept.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#r-as-a-giant-pocket-calculator",
-    "href": "sessions/01-r-basics/index.html#r-as-a-giant-pocket-calculator",
-    "title": "1 · Basics of R",
-    "section": "R as a giant pocket calculator",
-    "text": "R as a giant pocket calculator\n\n3 * (2 + 4)\n\n[1] 18\n\nsqrt(144)\n\n[1] 12\n\nexp(1)\n\n[1] 2.718282\n\nlog(100)\n\n[1] 4.60517\n\n\nThe lecture’s table of operators and functions — + - * / ^, sqrt, exp, log, sin, cos, min, max, range, length, sum, mean, var — all work this way.\nTwo things that catch everyone in the first ten minutes:\n\nIf the console shows + instead of &gt;, R is waiting for you to finish something, usually a missing bracket. Press Esc.\nR is case sensitive: Mean is not mean.\n\n\nFinite precision\n\nsqrt(2)^2 == 2\n\n[1] FALSE\n\nprint(sqrt(2)^2, digits = 22)\n\n[1] 2.000000000000000444089\n\n\nComputers approximate real numbers, so two quantities that are equal on paper may differ in the last few digits. Never test exact equality of decimals:\n\ndplyr::near(sqrt(2)^2, 2)\n\n[1] TRUE\n\n1 / 49 * 49 == 1\n\n[1] FALSE\n\ndplyr::near(1 / 49 * 49, 1)\n\n[1] TRUE\n\n\nThis is also the first time you see pkg::fun() — calling a function without loading its package. It makes clear where the function came from.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#expressions-and-assignments",
-    "href": "sessions/01-r-basics/index.html#expressions-and-assignments",
-    "title": "1 · Basics of R",
-    "section": "Expressions and assignments",
-    "text": "Expressions and assignments\nAn expression is evaluated, printed, and the value is lost. An assignment is evaluated, not printed, and the value is stored under a name.\n\n12 + 13        # an expression: shown, then gone\n\n[1] 25\n\nx &lt;- 12 + 13   # an assignment: stored, nothing shown\nx\n\n[1] 25\n\n\nWrapping the whole assignment in round brackets stores and prints:\n\n(x &lt;- 12 + 13)\n\n[1] 25\n\n\nYou will see this throughout the course as (model &lt;- lm(...)).\nOther command syntax from the lecture:\n\n12 + 13; sqrt(9)      # ';' separates commands on one line\n\n[1] 25\n\n\n[1] 3\n\n# a line starting with # is a comment and is not executed",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#or",
-    "href": "sessions/01-r-basics/index.html#or",
-    "title": "1 · Basics of R",
-    "section": "<- or =?",
-    "text": "&lt;- or =?\nBoth assign, but they are not interchangeable. The rule from the lecture:\n\nUse = to assign values to an argument in a function, and &lt;- to assign values to a variable.\n\nls() lists what is in your workspace, which makes the difference visible:\n\nrm(list = ls())     # empty the workspace first\nmean(x = 1:10)      # 'x' here names an argument of mean()\n\n[1] 5.5\n\nls()                # nothing was created\n\ncharacter(0)\n\n\n\nmean(x &lt;- 1:10)     # this ALSO creates a variable called x\n\n[1] 5.5\n\nls()\n\n[1] \"x\"\n\n\nSame answer; the second version left an object behind.\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\n\nx &lt; - 5\n\n [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE\n\nx\n\n [1]  1  2  3  4  5  6  7  8  9 10\n\n\nWith a space in the middle, &lt;- becomes &lt; followed by -, so R read it as “is x less than minus five?”, answered FALSE, and stored nothing. x is unchanged. No error, no warning.\n\n\nThere is also a function form:\n\nassign(\"y\", 13 + 14)\ny\n\n[1] 27",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#naming-things",
-    "href": "sessions/01-r-basics/index.html#naming-things",
-    "title": "1 · Basics of R",
-    "section": "Naming things",
-    "text": "Naming things\nNames may be any length, are case sensitive, and may contain letters, digits, . and _. They must start with a letter (or a dot not followed by a digit).\nThe lecture’s style advice:\n\nstick to ASCII, so your code travels;\nstart with letters, put numbers at the end;\nuse _ to separate words — snake_case or camelCase;\nyou can use . as a separator, but better to avoid it;\nuse names that make sense.\n\n\nreaction_time &lt;- 412      # good\nrt2 &lt;- 412                # fine\n\n\n\n\n\n\n\nWarning\n\n\n\nDo not name a variable after a function you use — mean, c, data, df, T, F. T &lt;- FALSE is legal and will quietly break things later.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#everything-is-an-object",
-    "href": "sessions/01-r-basics/index.html#everything-is-an-object",
-    "title": "1 · Basics of R",
-    "section": "Everything is an object",
-    "text": "Everything is an object\n\n“To understand computations in R, two slogans are helpful: Everything that exists is an object. Everything that happens is a function call.” — John Chambers\n\nA name does not contain a value; it is bound to one. y &lt;- 2 * sqrt(177) + 3 does not create an object called y — it binds the label y to a stored number.\n\ny1 &lt;- y &lt;- 2 * sqrt(177) + 3\ny; y1\n\n[1] 29.60827\n\n\n[1] 29.60827\n\n\nThat is two names pointing at one object, not two objects.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#the-help-system",
-    "href": "sessions/01-r-basics/index.html#the-help-system",
-    "title": "1 · Basics of R",
-    "section": "The help system",
-    "text": "The help system\n\n?mean                  # help for a function you can name\nhelp(mean)             # the same thing\n??regression           # search for a topic\napropos(\"mean\")        # functions whose name contains \"mean\"\nexample(seq)           # run the examples from the help page\n\nHelp pages have several sections. At this stage you need Arguments (what you can pass in) and Examples (at the bottom, ready to copy).",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#packages",
-    "href": "sessions/01-r-basics/index.html#packages",
-    "title": "1 · Basics of R",
-    "section": "Packages",
-    "text": "Packages\n\ninstall.packages(\"psych\", dependencies = TRUE)   # once per computer\nlibrary(psych)                                   # once per session\ninstalled.packages()                             # what is installed\npackageVersion(\"psych\")\ndetach(package:psych)                            # unload it\n\n\n\n\n\n\n\nWarning\n\n\n\nDo not use remove.packages() to unload a package — that deletes it. Use detach().\n\n\nLoading a package puts its functions on the search path:\n\nsearch()\n\n[1] \".GlobalEnv\"        \"package:stats\"     \"package:graphics\" \n[4] \"package:grDevices\" \"package:utils\"     \"package:datasets\" \n[7] \"package:methods\"   \"Autoloads\"         \"package:base\"     \n\n\nEnvironments, in the lecture’s phrase, are “bags of names”. The Global Environment — your workspace — is the first one. When two packages define the same function name, the one loaded later masks the earlier one, and R tells you so. pkg::fun() sidesteps the question entirely.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#the-workspace",
-    "href": "sessions/01-r-basics/index.html#the-workspace",
-    "title": "1 · Basics of R",
-    "section": "The workspace",
-    "text": "The workspace\n\na &lt;- 10; b &lt;- 1:10\nls()          # what is here\n\n[1] \"a\"             \"b\"             \"reaction_time\" \"rt2\"          \n[5] \"x\"             \"y\"             \"y1\"           \n\nls.str()      # ... and what each thing is\n\na :  num 10\nb :  int [1:10] 1 2 3 4 5 6 7 8 9 10\nreaction_time :  num 412\nrt2 :  num 412\nx :  int [1:10] 1 2 3 4 5 6 7 8 9 10\ny :  num 29.6\ny1 :  num 29.6\n\n\n\nrm(a)         # remove one object\nls()\n\n[1] \"b\"             \"reaction_time\" \"rt2\"           \"x\"            \n[5] \"y\"             \"y1\"           \n\nrm(list = ls())   # remove EVERYTHING\nls()\n\ncharacter(0)\n\n\nrm(list = ls()) opens almost every script in this course. Now you know it just deleted your work — and that you should not put it in a script you hand to someone else.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#working-directories",
-    "href": "sessions/01-r-basics/index.html#working-directories",
-    "title": "1 · Basics of R",
-    "section": "Working directories",
-    "text": "Working directories\nR always has one current working directory, and relative paths are interpreted from it.\n\ngetwd()          # where am I\nlist.files()     # what is here\nlist.files(\"data\")\n\nThe lecture sets this with setwd(\"C:/Somewhere/DirectoryName\"). Note that forward slashes work on every system, and a single backslash does not.\nIn this course you will not need setwd() at all. Every practical folder contains an .Rproj file; opening it sets the working directory to that folder. That is better than setwd() because the path is not written into the script, so the same script works on your computer and on mine.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#reading-data",
-    "href": "sessions/01-r-basics/index.html#reading-data",
-    "title": "1 · Basics of R",
-    "section": "Reading data",
-    "text": "Reading data\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\nThe lecture lists the main readers:\n\n\n\n\n\n\n\nFunction\nFor\n\n\n\n\nread.table(file, header = TRUE, sep = \"\\t\")\ngeneral text files\n\n\nread.csv(file)\ncomma-separated, decimal point\n\n\nread.csv2(file)\nsemicolon-separated, decimal comma — the common European export\n\n\nreadxl::read_excel(file)\nExcel\n\n\ndata(name, package = )\na dataset that ships with a package\n\n\n\nWe use read.csv() because these files are comma-separated with decimal points. If you ever open one in Excel on an Italian system and save it, you will need read.csv2() instead — which is a good reason not to open it in Excel.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#str-is-your-best-friend",
-    "href": "sessions/01-r-basics/index.html#str-is-your-best-friend",
-    "title": "1 · Basics of R",
-    "section": "str() is your best friend",
-    "text": "str() is your best friend\nThe lecture says it twice, so it is worth repeating: learn str(). It tells you what any object actually is.\n\nstr(memclinic)\n\n'data.frame':   180 obs. of  10 variables:\n $ id            : chr  \"P059\" \"P102\" \"P019\" \"P001\" ...\n $ group         : chr  \"HC\" \"MCI\" \"HC\" \"HC\" ...\n $ age           : int  71 66 64 74 58 61 76 71 57 73 ...\n $ sex           : chr  \"M\" \"M\" \"F\" \"F\" ...\n $ educ_years    : int  12 12 16 12 12 5 11 13 13 13 ...\n $ moca          : int  30 24 28 28 24 28 20 18 20 19 ...\n $ hippo_vol_mm3 : int  3801 3546 4411 3871 3570 3507 2971 3190 3408 2977 ...\n $ stroop_cost_ms: int  64 129 42 56 123 158 174 154 88 184 ...\n $ rt_mean       : int  387 403 338 360 404 353 492 484 412 446 ...\n $ csf_ptau      : num  14.8 38.2 19.5 16.1 21.4 15.1 71.5 36.1 17.7 33.1 ...\n\n\n180 people assessed at a memory clinic — healthy controls, mild cognitive impairment, and early Alzheimer’s disease — with MRI and cognitive measures. The codebook explains every column.\n\nhead(memclinic, 3)\n\n\n  \n\n\ndim(memclinic)\n\n[1] 180  10\n\nsummary(memclinic$moca)\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n  16.00   20.00   25.00   24.25   28.00   30.00 \n\n\nWhat a data frame is made of is the subject of practical 3. For now it is a table you can look at.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#exercises",
-    "href": "sessions/01-r-basics/index.html#exercises",
-    "title": "1 · Basics of R",
-    "section": "Exercises",
-    "text": "Exercises\n\n\n\n\n\n\nNote\n\n\n\nFill in each ___, and run the lines one at a time with Ctrl+Enter.\n\n\n\nExercise 1 — the calculator, and its limits\n\n\n# A reaction time of 412 ms, expressed in seconds\n412 / ___\n\n# Two ways of getting the same number\n0.1 + 0.2\n0.3\n\n# Are they equal?\n0.1 + 0.2 == ___\nprint(0.1 + 0.2, digits = 22)\ndplyr::near(0.1 + 0.2, ___)\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\n412 / 1000\n\n[1] 0.412\n\n0.1 + 0.2\n\n[1] 0.3\n\n0.3\n\n[1] 0.3\n\n0.1 + 0.2 == 0.3\n\n[1] FALSE\n\nprint(0.1 + 0.2, digits = 22)\n\n[1] 0.3000000000000000444089\n\ndplyr::near(0.1 + 0.2, 0.3)\n\n[1] TRUE\n\n\n0.1 + 0.2 is not exactly 0.3, because neither 0.1 nor 0.2 has an exact binary representation — just as 1/3 has no exact decimal one. Printing to 22 digits shows the discrepancy.\nThis matters whenever you compare computed numbers. Use dplyr::near(), or all.equal(), never ==.\n\n\n\n\n\nExercise 2 — assignment, and what it leaves behind\n\n\nrm(list = ls())\n\n# Store a participant's age, then print it in one line\n(age &lt;- ___)\n\n# Which of these creates a variable? Check with ls() after each.\nmean(x = 1:20)\nls()\n\nmean(x &lt;- 1:20)\n___()\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nrm(list = ls())\n\n(age &lt;- 72)\n\n[1] 72\n\nmean(x = 1:20)\n\n[1] 10.5\n\nls()\n\n[1] \"age\"\n\nmean(x &lt;- 1:20)\n\n[1] 10.5\n\nls()\n\n[1] \"age\" \"x\"  \n\n\nThe first call uses x as the name of an argument, so nothing is stored. The second uses &lt;- inside the call, which computes the mean and leaves an object x in the workspace.\nBoth print 10.5, so the output gives you no clue. ls() does.\n\n\n\n\n\nExercise 3 — find your way around the help\nUse the help system to answer these without guessing.\n\n\n?round\n# What is the second argument of round() called?\nround(3.14159, digits = ___)\n\n?seq\n# Produce the numbers 0, 5, 10, ..., 100 using the `by` argument\nseq(from = 0, to = ___, by = ___)\n\n# Produce exactly 5 evenly spaced numbers between 0 and 1\nseq(from = 0, to = 1, length.out = ___)\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nround(3.14159, digits = 2)\n\n[1] 3.14\n\nseq(from = 0, to = 100, by = 5)\n\n [1]   0   5  10  15  20  25  30  35  40  45  50  55  60  65  70  75  80  85  90\n[20]  95 100\n\nseq(from = 0, to = 1, length.out = 5)\n\n[1] 0.00 0.25 0.50 0.75 1.00\n\n\nThe second argument of round() is digits. seq() has several ways to specify a sequence — by sets the step, length.out sets how many values you want and lets R work out the step. The Arguments section of ?seq lists them all; you are not expected to remember them.\n\n\n\n\n\nExercise 4 — the workspace and the data\n\n\nrm(list = ls())\n\nmemclinic &lt;- read.csv(\"data/___.csv\")\n\nstr(memclinic)\ndim(memclinic)\nnames(memclinic)\nhead(memclinic, ___)\n\nls()                     # what is in the workspace now?\nsummary(memclinic$___)   # summarise the MoCA scores\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nrm(list = ls())\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\nstr(memclinic)\n\n'data.frame':   180 obs. of  10 variables:\n $ id            : chr  \"P059\" \"P102\" \"P019\" \"P001\" ...\n $ group         : chr  \"HC\" \"MCI\" \"HC\" \"HC\" ...\n $ age           : int  71 66 64 74 58 61 76 71 57 73 ...\n $ sex           : chr  \"M\" \"M\" \"F\" \"F\" ...\n $ educ_years    : int  12 12 16 12 12 5 11 13 13 13 ...\n $ moca          : int  30 24 28 28 24 28 20 18 20 19 ...\n $ hippo_vol_mm3 : int  3801 3546 4411 3871 3570 3507 2971 3190 3408 2977 ...\n $ stroop_cost_ms: int  64 129 42 56 123 158 174 154 88 184 ...\n $ rt_mean       : int  387 403 338 360 404 353 492 484 412 446 ...\n $ csf_ptau      : num  14.8 38.2 19.5 16.1 21.4 15.1 71.5 36.1 17.7 33.1 ...\n\ndim(memclinic)\n\n[1] 180  10\n\nnames(memclinic)\n\n [1] \"id\"             \"group\"          \"age\"            \"sex\"           \n [5] \"educ_years\"     \"moca\"           \"hippo_vol_mm3\"  \"stroop_cost_ms\"\n [9] \"rt_mean\"        \"csf_ptau\"      \n\nhead(memclinic, 3)\n\n\n  \n\n\nls()\n\n[1] \"memclinic\"\n\nsummary(memclinic$moca)\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n  16.00   20.00   25.00   24.25   28.00   30.00 \n\n\n180 rows and 10 columns, and the only thing in the workspace is memclinic itself — reading a file creates one object.\nstr() reports chr for id, group and sex. Those are text, not categories, as far as R is concerned; turning them into proper categorical variables is the subject of practical 2.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#what-to-take-away",
-    "href": "sessions/01-r-basics/index.html#what-to-take-away",
-    "title": "1 · Basics of R",
-    "section": "What to take away",
-    "text": "What to take away\n\n&lt;- makes a variable, = names an argument. They are not interchangeable.\nNever compare decimals with ==.\nls() shows your workspace, rm(list = ls()) empties it.\nOpen the .Rproj; this way, you don’t need to use setwd().\nWhen anything surprises you, run str() on it.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "sessions/01-r-basics/index.html#going-further",
-    "href": "sessions/01-r-basics/index.html#going-further",
-    "title": "1 · Basics of R",
-    "section": "Going further",
-    "text": "Going further\nThe appendix covers names and memory, environments and masking, attach()/detach(), saving and loading objects, and floating point in more detail.",
-    "crumbs": [
-      "Start here",
-      "Practicals",
-      "1 · Basics of R"
-    ]
-  },
-  {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Getting started with R",
-    "section": "",
-    "text": "ImportantThis is not the course material\n\n\n\nThe course is taught from Prof. Noventa’s lectures and his R scripts, which are on Moodle. Those are what you are assessed on.\nThis site is optional. It exists for one reason: if you have never used R before, it will help you understand the R scripts used in the course.\nIf you already use R, you can skip all of it.",
-    "crumbs": [
-      "Start here"
-    ]
-  },
-  {
-    "objectID": "index.html#what-is-here",
-    "href": "index.html#what-is-here",
-    "title": "Getting started with R",
-    "section": "What is here",
-    "text": "What is here\nFive practicals. The first three run alongside the Introduction to R lectures, one each, covering the same ground more slowly and with exercises. The fourth covers handling and plotting data, which every analysis script in the course assumes you can already do.\n\n\n\n#\nPractical\nAlongside\nWhat it covers\n\n\n\n\n01\nBasics of R\nIntroduction to R, Part 1\ncalculator, objects, help, workspace, reading data\n\n\n02\nR objects, attributes, matrices\nIntroduction to R, Part 2\ntypes, vectors, subsetting, recycling, NA, factors, matrices\n\n\n03\nLists, data frames, control flow, functions\nIntroduction to R, Part 3\nlists, data frames, tibbles, if/for, writing functions\n\n\n04\nWorking with data, and drawing it\n—\nsubsetting, recoding, summaries, base graphics, wide ↔︎ long\n\n\n05\nSimple linear regression: cognitive rehabilitation and memory gain\n—\nfitting lm(), interpreting intercept and slope, reproducing summary()/anova() by hand, diagnostics\n\n\n\nEach practical also has an appendix — optional asides for anyone who wants to know why something works. Nothing in an appendix is needed for anything else.",
-    "crumbs": [
-      "Start here"
-    ]
-  },
-  {
-    "objectID": "index.html#two-ways-to-use-it",
-    "href": "index.html#two-ways-to-use-it",
-    "title": "Getting started with R",
-    "section": "Two ways to use it",
-    "text": "Two ways to use it\nYou can read it in the browser — every practical is a page on this site, with all the code and its output already shown.\nOr you can download it and run it, which is the point. Each practical has a download link at the top of its page, giving you a zip containing:\n\nthe .R script for that practical,\na data/ folder with the data and a codebook explaining every variable,\nan .Rproj file.\n\nUnzip it, then double-click the .Rproj before opening the script. That sets R’s working directory for you, which is why none of these scripts contain a setwd() line.",
-    "crumbs": [
-      "Start here"
-    ]
-  },
-  {
-    "objectID": "index.html#solutions",
-    "href": "index.html#solutions",
-    "title": "Getting started with R",
-    "section": "Solutions",
-    "text": "Solutions\nEvery exercise has a worked solution, and they are not shown at first. Each practical’s answers appear on this site after each class. Try the exercise first; the answer will help you understand the material much more once you have been stuck on it.",
-    "crumbs": [
-      "Start here"
-    ]
-  },
-  {
-    "objectID": "index.html#before-you-start",
-    "href": "index.html#before-you-start",
-    "title": "Getting started with R",
-    "section": "Before you start",
-    "text": "Before you start\nWork through Setting up R — install R, RStudio, and the four packages the practicals use. Do that before anything else, not while you are trying to follow a practical.\n\n\n\n\n\n\nTipOne habit worth forming now\n\n\n\nRun code one line at a time with Ctrl+Enter (Cmd+Enter on a Mac), and read what each line prints. Do not press Source — the exercises contain ___ blanks for you to fill in, and Source tries to parse the whole file at once, so a single unfilled blank stops everything before any of it runs.",
-    "crumbs": [
-      "Start here"
-    ]
-  },
-  {
-    "objectID": "setup.html",
-    "href": "setup.html",
-    "title": "Setting up R",
-    "section": "",
-    "text": "Do this before you start practical 1. If something fails, keep the error message — it is much faster to fix than a blank screen.",
-    "crumbs": [
-      "Start here",
-      "Setting up R"
-    ]
-  },
-  {
-    "objectID": "setup.html#install-r-and-rstudio",
-    "href": "setup.html#install-r-and-rstudio",
-    "title": "Setting up R",
-    "section": "1. Install R and RStudio",
-    "text": "1. Install R and RStudio\nInstall R first, then RStudio. They are two separate downloads.\n\nR: https://cran.r-project.org\nRStudio Desktop (free): https://posit.co/download/rstudio-desktop/\n\nOpen RStudio. If the console shows a version line starting R version 4. you are ready.",
-    "crumbs": [
-      "Start here",
-      "Setting up R"
-    ]
-  },
-  {
-    "objectID": "setup.html#install-the-packages",
-    "href": "setup.html#install-the-packages",
-    "title": "Setting up R",
-    "section": "2. Install the packages",
-    "text": "2. Install the packages\nCopy this into the RStudio console and press Enter. It will take a few minutes.\n\ninstall.packages(c(\"dplyr\", \"ggplot2\", \"psych\", \"tibble\", \"tidyr\"))\n\nThat is everything these four practicals need. A couple of the appendices show optional asides using lobstr, sloop, purrr and magrittr; those chunks are not run for you, and each says what to install if you want to try it.\nProf. Noventa’s own scripts use many more packages than this. Install those when you reach the script that needs them, not now.",
-    "crumbs": [
-      "Start here",
-      "Setting up R"
-    ]
-  },
-  {
-    "objectID": "setup.html#check-it-worked",
-    "href": "setup.html#check-it-worked",
-    "title": "Setting up R",
-    "section": "3. Check it worked",
-    "text": "3. Check it worked\n\nlibrary(ggplot2)\nggplot(mtcars, aes(wt, mpg)) + geom_point()\n\nA scatterplot in the Plots pane means you are set up correctly.",
-    "crumbs": [
-      "Start here",
-      "Setting up R"
-    ]
-  },
-  {
-    "objectID": "setup.html#working-directories-and-why-there-is-no-setwd",
-    "href": "setup.html#working-directories-and-why-there-is-no-setwd",
-    "title": "Setting up R",
-    "section": "Working directories, and why there is no setwd()",
-    "text": "Working directories, and why there is no setwd()\nEvery practical folder contains an .Rproj file. Double-click it, and RStudio opens with the working directory already set to that folder — so read.csv(\"data/memclinic.csv\") just works.\nThis is why you will never see setwd(\"C:/Users/...\") in these scripts. A path like that only works on the machine it was typed on.",
-    "crumbs": [
-      "Start here",
-      "Setting up R"
+      "4 · Working with data, and drawing it"
     ]
   },
   {
@@ -993,183 +684,564 @@
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html",
-    "href": "sessions/04-working-with-data/index.html",
-    "title": "4 · Working with data, and drawing it",
+    "objectID": "setup.html",
+    "href": "setup.html",
+    "title": "Setting up R",
     "section": "",
-    "text": "Note\n\n\n\nOptional extra practice, and unlike practicals 1 to 3 this one runs alongside no lecture at all. It covers the handling and plotting that Prof. Noventa’s analysis scripts assume you already know, and that the Introduction to R lectures do not cover. Nothing here is assessed.",
+    "text": "Do this before you start practical 1. If something fails, keep the error message — it is much faster to fix than a blank screen.",
     "crumbs": [
       "Start here",
-      "Practicals",
-      "4 · Working with data, and drawing it"
+      "Setting up R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#what-you-will-be-able-to-do",
-    "href": "sessions/04-working-with-data/index.html#what-you-will-be-able-to-do",
-    "title": "4 · Working with data, and drawing it",
-    "section": "What you will be able to do",
-    "text": "What you will be able to do\nBy the end of this practical you should be able to:\n\npull out the rows and columns you want, and sort a table;\ncreate a new variable by recoding an existing one;\nset the order of a factor’s levels, and say why that changes a model;\nsummarise a variable within each diagnostic group;\ndraw a histogram, a boxplot and a scatterplot, with axes a reader can understand;\nturn a wide table into a long one, which is the shape repeated-measures analyses need.\n\n\n\n\n\n\n\nNote⬇ Download this practical\n\n\n\nA zip containing the R script, the data, and an .Rproj file. Unzip it somewhere you can find again, then double-click the .Rproj.",
+    "objectID": "setup.html#install-r-and-rstudio",
+    "href": "setup.html#install-r-and-rstudio",
+    "title": "Setting up R",
+    "section": "1. Install R and RStudio",
+    "text": "1. Install R and RStudio\nInstall R first, then RStudio. They are two separate downloads.\n\nR: https://cran.r-project.org\nRStudio Desktop (free): https://posit.co/download/rstudio-desktop/\n\nOpen RStudio. If the console shows a version line starting R version 4. you are ready.",
     "crumbs": [
       "Start here",
-      "Practicals",
-      "4 · Working with data, and drawing it"
+      "Setting up R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#before-you-start",
-    "href": "sessions/04-working-with-data/index.html#before-you-start",
-    "title": "4 · Working with data, and drawing it",
+    "objectID": "setup.html#install-the-packages",
+    "href": "setup.html#install-the-packages",
+    "title": "Setting up R",
+    "section": "2. Install the packages",
+    "text": "2. Install the packages\nCopy this into the RStudio console and press Enter. It will take a few minutes.\n\ninstall.packages(c(\"dplyr\", \"ggplot2\", \"psych\", \"tibble\", \"tidyr\"))\n\nThat is everything these four practicals need. A couple of the appendices show optional asides using lobstr, sloop, purrr and magrittr; those chunks are not run for you, and each says what to install if you want to try it.\nProf. Noventa’s own scripts use many more packages than this. Install those when you reach the script that needs them, not now.",
+    "crumbs": [
+      "Start here",
+      "Setting up R"
+    ]
+  },
+  {
+    "objectID": "setup.html#check-it-worked",
+    "href": "setup.html#check-it-worked",
+    "title": "Setting up R",
+    "section": "3. Check it worked",
+    "text": "3. Check it worked\n\nlibrary(ggplot2)\nggplot(mtcars, aes(wt, mpg)) + geom_point()\n\nA scatterplot in the Plots pane means you are set up correctly.",
+    "crumbs": [
+      "Start here",
+      "Setting up R"
+    ]
+  },
+  {
+    "objectID": "setup.html#working-directories-and-why-there-is-no-setwd",
+    "href": "setup.html#working-directories-and-why-there-is-no-setwd",
+    "title": "Setting up R",
+    "section": "Working directories, and why there is no setwd()",
+    "text": "Working directories, and why there is no setwd()\nEvery practical folder contains an .Rproj file. Double-click it, and RStudio opens with the working directory already set to that folder — so read.csv(\"data/memclinic.csv\") just works.\nThis is why you will never see setwd(\"C:/Users/...\") in these scripts. A path like that only works on the machine it was typed on.",
+    "crumbs": [
+      "Start here",
+      "Setting up R"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Getting started with R",
+    "section": "",
+    "text": "ImportantThis is not the course material\n\n\n\nThe course is taught from Prof. Noventa’s lectures and his R scripts, which are on Moodle. Those are what you are assessed on.\nThis site is optional. It exists for one reason: if you have never used R before, it will help you understand the R scripts used in the course.\nIf you already use R, you can skip all of it.",
+    "crumbs": [
+      "Start here"
+    ]
+  },
+  {
+    "objectID": "index.html#what-is-here",
+    "href": "index.html#what-is-here",
+    "title": "Getting started with R",
+    "section": "What is here",
+    "text": "What is here\nSix practicals. The first three run alongside the Introduction to R lectures, one each, covering the same ground more slowly and with exercises. The fourth covers handling and plotting data, which every analysis script in the course assumes you can already do.\n\n\n\n#\nPractical\nAlongside\nWhat it covers\n\n\n\n\n01\nBasics of R\nIntroduction to R, Part 1\ncalculator, objects, help, workspace, reading data\n\n\n02\nR objects, attributes, matrices\nIntroduction to R, Part 2\ntypes, vectors, subsetting, recycling, NA, factors, matrices\n\n\n03\nLists, data frames, control flow, functions\nIntroduction to R, Part 3\nlists, data frames, tibbles, if/for, writing functions\n\n\n04\nWorking with data, and drawing it\n—\nsubsetting, recoding, summaries, base graphics, wide ↔︎ long\n\n\n05\nSimple linear regression: cognitive rehabilitation and memory gain\n—\nfitting lm(), interpreting intercept and slope, reproducing summary()/anova() by hand, diagnostics\n\n\n06\nANOVA as regression: patient groups and recovery over time\n—\nt-test and ANOVA as lm(), coding a factor, post-hoc tests, repeated measures, lmer()\n\n\n\nEach practical also has an appendix — optional asides for anyone who wants to know why something works. Nothing in an appendix is needed for anything else.",
+    "crumbs": [
+      "Start here"
+    ]
+  },
+  {
+    "objectID": "index.html#two-ways-to-use-it",
+    "href": "index.html#two-ways-to-use-it",
+    "title": "Getting started with R",
+    "section": "Two ways to use it",
+    "text": "Two ways to use it\nYou can read it in the browser — every practical is a page on this site, with all the code and its output already shown.\nOr you can download it and run it, which is the point. Each practical has a download link at the top of its page, giving you a zip containing:\n\nthe .R script for that practical,\na data/ folder with the data and a codebook explaining every variable,\nan .Rproj file.\n\nUnzip it, then double-click the .Rproj before opening the script. That sets R’s working directory for you, which is why none of these scripts contain a setwd() line.",
+    "crumbs": [
+      "Start here"
+    ]
+  },
+  {
+    "objectID": "index.html#solutions",
+    "href": "index.html#solutions",
+    "title": "Getting started with R",
+    "section": "Solutions",
+    "text": "Solutions\nEvery exercise has a worked solution, and they are not shown at first. Each practical’s answers appear on this site after each class. Try the exercise first; the answer will help you understand the material much more once you have been stuck on it.",
+    "crumbs": [
+      "Start here"
+    ]
+  },
+  {
+    "objectID": "index.html#before-you-start",
+    "href": "index.html#before-you-start",
+    "title": "Getting started with R",
     "section": "Before you start",
-    "text": "Before you start\n\n\n\n\n\n\nImportantOpen the .Rproj file first\n\n\n\nDouble-click the .Rproj file in this folder. If you see cannot open file 'data/memclinic.csv', run getwd() — you opened the script rather than the project.\n\n\n\n\n\n\n\n\nImportantOne line at a time — do not press Source\n\n\n\nCtrl+Enter (Cmd+Enter on a Mac) runs the current line. The Source button will fail on the whole file while any ___ blank is still unfilled.\n\n\n\n# We call dplyr and psych functions with the pkg::fun() form rather than\n# loading them, so it is always obvious where a function came from.\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\nstr(memclinic)\n\n'data.frame':   180 obs. of  10 variables:\n $ id            : chr  \"P059\" \"P102\" \"P019\" \"P001\" ...\n $ group         : chr  \"HC\" \"MCI\" \"HC\" \"HC\" ...\n $ age           : int  71 66 64 74 58 61 76 71 57 73 ...\n $ sex           : chr  \"M\" \"M\" \"F\" \"F\" ...\n $ educ_years    : int  12 12 16 12 12 5 11 13 13 13 ...\n $ moca          : int  30 24 28 28 24 28 20 18 20 19 ...\n $ hippo_vol_mm3 : int  3801 3546 4411 3871 3570 3507 2971 3190 3408 2977 ...\n $ stroop_cost_ms: int  64 129 42 56 123 158 174 154 88 184 ...\n $ rt_mean       : int  387 403 338 360 404 353 492 484 412 446 ...\n $ csf_ptau      : num  14.8 38.2 19.5 16.1 21.4 15.1 71.5 36.1 17.7 33.1 ...\n\n\nThe codebook describes every column.",
+    "text": "Before you start\nWork through Setting up R — install R, RStudio, and the four packages the practicals use. Do that before anything else, not while you are trying to follow a practical.\n\n\n\n\n\n\nTipOne habit worth forming now\n\n\n\nRun code one line at a time with Ctrl+Enter (Cmd+Enter on a Mac), and read what each line prints. Do not press Source — the exercises contain ___ blanks for you to fill in, and Source tries to parse the whole file at once, so a single unfilled blank stops everything before any of it runs.",
     "crumbs": [
-      "Start here",
-      "Practicals",
-      "4 · Working with data, and drawing it"
+      "Start here"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#rows-and-columns",
-    "href": "sessions/04-working-with-data/index.html#rows-and-columns",
-    "title": "4 · Working with data, and drawing it",
-    "section": "Rows and columns",
-    "text": "Rows and columns\nInside [ ], what comes before the comma chooses rows and what comes after it chooses columns.\n\nmemclinic[1:3, ]                                # first three people\n\n\n  \n\n\nmemclinic[memclinic$group == \"AD\", ][1:3, ]     # the AD patients\n\n\n  \n\n\nhead(memclinic[, c(\"id\", \"group\", \"moca\")], 3)  # three columns\n\n\n  \n\n\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\nAsking for one column with a comma gives you a vector; asking for two gives you a data frame.\n\nclass(memclinic[memclinic$group == \"AD\", \"moca\"])\n\n[1] \"integer\"\n\nclass(memclinic[memclinic$group == \"AD\", c(\"id\", \"moca\")])\n\n[1] \"data.frame\"\n\n\nThis catches people when a function suddenly complains that it was given a vector where it wanted a table.\n\n\nsubset() says the same thing more readably:\n\nsevere &lt;- subset(memclinic, group == \"AD\" & moca &lt; 20)\nnrow(severe)\n\n[1] 36\n\n\nNote it takes bare column names, with no memclinic$. It is a convenience for interactive work; inside your own functions it can behave unexpectedly, so the [ ] form is the safer habit.",
+    "objectID": "sessions/01-r-basics/index.html",
+    "href": "sessions/01-r-basics/index.html",
+    "title": "1 · Basics of R",
+    "section": "",
+    "text": "Note⬇ Download this practical\n\n\n\nA zip containing the R script, the data, and an .Rproj file. Unzip it somewhere you can find again, then double-click the .Rproj.\nOptional extra practice alongside Introduction to R — Part 1. It does not replace the lecture, and nothing here is assessed.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#sorting",
-    "href": "sessions/04-working-with-data/index.html#sorting",
-    "title": "4 · Working with data, and drawing it",
-    "section": "Sorting",
-    "text": "Sorting\norder() returns the positions that would put a vector in order, and you feed those back in as row numbers.\n\nsmallest &lt;- memclinic[order(memclinic$hippo_vol_mm3), ]\nhead(smallest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 3)\n\n\n  \n\n\nlargest &lt;- memclinic[order(-memclinic$hippo_vol_mm3), ]\nhead(largest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 3)\n\n\n  \n\n\n\n(sort() sorts a single vector; order() is what you need to reorder a whole table.)",
+    "objectID": "sessions/01-r-basics/index.html#what-you-will-be-able-to-do",
+    "href": "sessions/01-r-basics/index.html#what-you-will-be-able-to-do",
+    "title": "1 · Basics of R",
+    "section": "What you will be able to do",
+    "text": "What you will be able to do\n\nuse R as a calculator, and recognise when floating-point arithmetic has tricked you;\ncreate objects, and say what &lt;- does that = does not;\nfind your way around the help system;\nsee what is in your workspace, and clear it;\nset up a working directory properly, and read a data file from it;\nrun str() on anything and read what it tells you.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#making-new-variables",
-    "href": "sessions/04-working-with-data/index.html#making-new-variables",
-    "title": "4 · Working with data, and drawing it",
-    "section": "Making new variables",
-    "text": "Making new variables\nifelse() works through a vector and returns one of two values for each element.\n\nmemclinic$screen &lt;- ifelse(memclinic$moca &lt; 26, \"below cut-off\", \"normal\")\ntable(memclinic$screen)\n\n\nbelow cut-off        normal \n           97            83 \n\n\nFor more than two outcomes, nested ifelse() becomes unreadable. The professor’s tool for this is case_when():\n\nmemclinic$severity &lt;- dplyr::case_when(\n  memclinic$moca &gt;= 26 ~ \"normal\",\n  memclinic$moca &gt;= 20 ~ \"mild\",\n  TRUE                 ~ \"moderate-severe\"\n)\ntable(memclinic$severity)\n\n\n           mild moderate-severe          normal \n             61              36              83 \n\n\nConditions are checked in the order you write them, and the first match wins — which is why &gt;= 26 has to come before &gt;= 20. The final TRUE is the catch-all.",
+    "objectID": "sessions/01-r-basics/index.html#before-you-start",
+    "href": "sessions/01-r-basics/index.html#before-you-start",
+    "title": "1 · Basics of R",
+    "section": "Before you start",
+    "text": "Before you start\n\n\n\n\n\n\nImportantOpen the .Rproj file first\n\n\n\nDouble-click the .Rproj file in this folder before anything else. That sets R’s working directory, which is why nothing here calls setwd().\nIf you later see\ncannot open file 'data/memclinic.csv': No such file or directory\nrun getwd() and list.files(). If there is no data folder in the list, you opened the script instead of the project. Close RStudio and double-click the .Rproj file.\n\n\n\n\n\n\n\n\nImportantRun this script one line at a time — do not press Source\n\n\n\nPut your cursor on a line and press Ctrl+Enter (Cmd+Enter on a Mac).\nDo not press the Source button. R reads the whole file before it runs any of it, and the ___ blanks in the exercises are not valid R until you fill them in. Pressing Source with a blank still in the file gives Error: unexpected input and runs nothing at all.\n\n\n\n\n\n\n\n\nTipTyping the symbols on an Italian keyboard\n\n\n\n\n\n\n\n\n\n\n\n\n\nSymbol\nMac\nWindows\n\n\n\n\n&lt;-\nOption + − (RStudio inserts it for you)\nAlt + −\n\n\n~\nOption + 5\nAltGr + ì\n\n\n[ ]\nOption + è / Option + +\nAltGr + è / AltGr + +\n\n\n{ }\nShift + Option + è / Shift + Option + +\nShift + AltGr + è / +\n\n\n#\nOption + à\nAltGr + à\n\n\n\nUse the copy button in the corner of each grey box rather than selecting text — copying from a browser can turn \" into \", which R will not accept.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#factors-and-why-their-order-matters",
-    "href": "sessions/04-working-with-data/index.html#factors-and-why-their-order-matters",
-    "title": "4 · Working with data, and drawing it",
-    "section": "Factors, and why their order matters",
-    "text": "Factors, and why their order matters\nIn practical 2 you saw that group arrives as text, and that making it a factor sorts the levels alphabetically:\n\nlevels(factor(memclinic$group))\n\n[1] \"AD\"  \"HC\"  \"MCI\"\n\n\nAD first. That is not how anyone would present these groups, and it is not harmless, because the first level becomes the baseline that everything else is compared against.\n\ncoef(lm(moca ~ factor(group), data = memclinic))\n\n     (Intercept)  factor(group)HC factor(group)MCI \n        19.18333          9.20000          6.00000 \n\n\nThe intercept, 19.18, is the AD mean. Now set the order deliberately:\n\nmemclinic$group &lt;- factor(memclinic$group, levels = c(\"HC\", \"MCI\", \"AD\"))\nlevels(memclinic$group)\n\n[1] \"HC\"  \"MCI\" \"AD\" \n\ncoef(lm(moca ~ group, data = memclinic))\n\n(Intercept)    groupMCI     groupAD \n   28.38333    -3.20000    -9.20000 \n\n\nThe intercept is now 28.38, the HC mean, and the other two numbers are the MCI and AD deficits relative to healthy controls — which is what a clinical reader expects. Same data, same model, every number different.\n\ncontrasts(memclinic$group)\n\n    MCI AD\nHC    0  0\nMCI   1  0\nAD    0  1\n\n\nThat matrix is what R actually put into the model. Practical 6 is about nothing else.\nrelevel() moves one level to the front without retyping them all:\n\nlevels(relevel(memclinic$group, ref = \"AD\"))\n\n[1] \"AD\"  \"HC\"  \"MCI\"",
+    "objectID": "sessions/01-r-basics/index.html#r-as-a-giant-pocket-calculator",
+    "href": "sessions/01-r-basics/index.html#r-as-a-giant-pocket-calculator",
+    "title": "1 · Basics of R",
+    "section": "R as a giant pocket calculator",
+    "text": "R as a giant pocket calculator\n\n3 * (2 + 4)\n\n[1] 18\n\nsqrt(144)\n\n[1] 12\n\nexp(1)\n\n[1] 2.718282\n\nlog(100)\n\n[1] 4.60517\n\n\nThe lecture’s table of operators and functions — + - * / ^, sqrt, exp, log, sin, cos, min, max, range, length, sum, mean, var — all work this way.\nTwo things that catch everyone in the first ten minutes:\n\nIf the console shows + instead of &gt;, R is waiting for you to finish something, usually a missing bracket. Press Esc.\nR is case sensitive: Mean is not mean.\n\n\nFinite precision\n\nsqrt(2)^2 == 2\n\n[1] FALSE\n\nprint(sqrt(2)^2, digits = 22)\n\n[1] 2.000000000000000444089\n\n\nComputers approximate real numbers, so two quantities that are equal on paper may differ in the last few digits. Never test exact equality of decimals:\n\ndplyr::near(sqrt(2)^2, 2)\n\n[1] TRUE\n\n1 / 49 * 49 == 1\n\n[1] FALSE\n\ndplyr::near(1 / 49 * 49, 1)\n\n[1] TRUE\n\n\nThis is also the first time you see pkg::fun() — calling a function without loading its package. It makes clear where the function came from.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#counting",
-    "href": "sessions/04-working-with-data/index.html#counting",
-    "title": "4 · Working with data, and drawing it",
-    "section": "Counting",
-    "text": "Counting\n\ntable(memclinic$group)\n\n\n HC MCI  AD \n 60  60  60 \n\ntable(memclinic$group, memclinic$sex)\n\n     \n       F  M\n  HC  35 25\n  MCI 35 25\n  AD  33 27\n\nround(prop.table(table(memclinic$group, memclinic$screen), 1), 2)\n\n     \n      below cut-off normal\n  HC           0.05   0.95\n  MCI          0.57   0.43\n  AD           1.00   0.00\n\n\nprop.table(..., 1) turns counts into proportions within each row, so each row sums to 1.",
+    "objectID": "sessions/01-r-basics/index.html#expressions-and-assignments",
+    "href": "sessions/01-r-basics/index.html#expressions-and-assignments",
+    "title": "1 · Basics of R",
+    "section": "Expressions and assignments",
+    "text": "Expressions and assignments\nAn expression is evaluated, printed, and the value is lost. An assignment is evaluated, not printed, and the value is stored under a name.\n\n12 + 13        # an expression: shown, then gone\n\n[1] 25\n\nx &lt;- 12 + 13   # an assignment: stored, nothing shown\nx\n\n[1] 25\n\n\nWrapping the whole assignment in round brackets stores and prints:\n\n(x &lt;- 12 + 13)\n\n[1] 25\n\n\nYou will see this throughout the course as (model &lt;- lm(...)).\nOther command syntax from the lecture:\n\n12 + 13; sqrt(9)      # ';' separates commands on one line\n\n[1] 25\n\n\n[1] 3\n\n# a line starting with # is a comment and is not executed",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#summarising-by-group",
-    "href": "sessions/04-working-with-data/index.html#summarising-by-group",
-    "title": "4 · Working with data, and drawing it",
-    "section": "Summarising by group",
-    "text": "Summarising by group\n\ntapply(memclinic$moca, memclinic$group, mean)\n\n      HC      MCI       AD \n28.38333 25.18333 19.18333 \n\n\naggregate() does the same with a formula, and handles several variables at once:\n\naggregate(moca ~ group, data = memclinic, FUN = mean)\n\n\n  \n\n\naggregate(cbind(hippo_vol_mm3, csf_ptau) ~ group, data = memclinic, FUN = mean)\n\n\n  \n\n\n\nwith() saves repeating the data frame name:\n\nwith(memclinic, tapply(hippo_vol_mm3, group, median))\n\n    HC    MCI     AD \n3855.0 3489.0 3111.5 \n\n\nThe psych package gives a fuller description, including skewness:\n\npsych::describe(memclinic[, c(\"moca\", \"hippo_vol_mm3\", \"csf_ptau\")])\n\n\n  \n\n\n\n\n\n\n\n\n\nWarning\n\n\n\nSelect the columns you want first. psych::describe(memclinic) will happily report a mean for id and group, marking them with a * — a number that means nothing. This is why the course scripts write psych::describe(memclinic[, c(\"hippo_vol_mm3\", \"stroop_cost_ms\")]) instead.\n\n\nLook at skew for csf_ptau: strongly positive, so the distribution has a long right tail and its mean sits well above its median. The next section makes that visible.",
+    "objectID": "sessions/01-r-basics/index.html#or",
+    "href": "sessions/01-r-basics/index.html#or",
+    "title": "1 · Basics of R",
+    "section": "<- or =?",
+    "text": "&lt;- or =?\nBoth assign, but they are not interchangeable. The rule from the lecture:\n\nUse = to assign values to an argument in a function, and &lt;- to assign values to a variable.\n\nls() lists what is in your workspace, which makes the difference visible:\n\nrm(list = ls())     # empty the workspace first\nmean(x = 1:10)      # 'x' here names an argument of mean()\n\n[1] 5.5\n\nls()                # nothing was created\n\ncharacter(0)\n\n\n\nmean(x &lt;- 1:10)     # this ALSO creates a variable called x\n\n[1] 5.5\n\nls()\n\n[1] \"x\"\n\n\nSame answer; the second version left an object behind.\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\n\nx &lt; - 5\n\n [1] FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE\n\nx\n\n [1]  1  2  3  4  5  6  7  8  9 10\n\n\nWith a space in the middle, &lt;- becomes &lt; followed by -, so R read it as “is x less than minus five?”, answered FALSE, and stored nothing. x is unchanged. No error, no warning.\n\n\nThere is also a function form:\n\nassign(\"y\", 13 + 14)\ny\n\n[1] 27",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#drawing-the-data",
-    "href": "sessions/04-working-with-data/index.html#drawing-the-data",
-    "title": "4 · Working with data, and drawing it",
-    "section": "Drawing the data",
-    "text": "Drawing the data\n\nOne variable: a histogram\n\nhist(memclinic$csf_ptau,\n     breaks = 20,\n     main   = \"CSF phosphorylated tau\",\n     xlab   = \"p-tau (pg/mL)\")\n\n\n\n\n\n\n\n\nThere is the skew from the table above.\n\n\nOne variable per group: a boxplot\n\nboxplot(moca ~ group, data = memclinic,\n        xlab = \"Diagnosis\",\n        ylab = \"MoCA score\")\n\n\n\n\n\n\n\n\nThe groups come out in clinical order because we fixed the factor levels earlier. Had we not, this plot would read AD, HC, MCI.\n\n\nTwo variables: a scatterplot\n\nplot(memclinic$hippo_vol_mm3, memclinic$stroop_cost_ms,\n     pch  = 16,\n     col  = \"grey40\",\n     xlab = \"Hippocampal volume (mm³)\",\n     ylab = \"Stroop interference cost (ms)\")\n\nabline(lm(stroop_cost_ms ~ hippo_vol_mm3, data = memclinic), col = \"blue\")\n\n\n\n\n\n\n\n\nThat abline(lm(...)) line has already fitted a regression — the kind of model the Regression 1 lecture is about.\n\n\n\n\n\n\nTipLabel your axes\n\n\n\nxlab and ylab are not decoration. No plot should leave this room with memclinic$moca written along an axis.\n\n\n\n\nSeveral plots at once\npar(mfrow = c(rows, columns)) splits the plotting area into a grid.\n\npar(mfrow = c(2, 2))\nhist(memclinic$age,  main = \"Age\",  xlab = \"years\")\nhist(memclinic$moca, main = \"MoCA\", xlab = \"score\")\nboxplot(hippo_vol_mm3 ~ group, data = memclinic, ylab = \"Hippocampal volume\")\nplot(memclinic$age, memclinic$hippo_vol_mm3,\n     xlab = \"Age\", ylab = \"Hippocampal volume\")\n\n\n\n\n\n\n\npar(mfrow = c(1, 1))     # always put it back\n\nPractical 5 opens with par(mfrow = c(2, 2)); plot(m1) to get four diagnostic plots in one figure. This is why.",
+    "objectID": "sessions/01-r-basics/index.html#naming-things",
+    "href": "sessions/01-r-basics/index.html#naming-things",
+    "title": "1 · Basics of R",
+    "section": "Naming things",
+    "text": "Naming things\nNames may be any length, are case sensitive, and may contain letters, digits, . and _. They must start with a letter (or a dot not followed by a digit).\nThe lecture’s style advice:\n\nstick to ASCII, so your code travels;\nstart with letters, put numbers at the end;\nuse _ to separate words — snake_case or camelCase;\nyou can use . as a separator, but better to avoid it;\nuse names that make sense.\n\n\nreaction_time &lt;- 412      # good\nrt2 &lt;- 412                # fine\n\n\n\n\n\n\n\nWarning\n\n\n\nDo not name a variable after a function you use — mean, c, data, df, T, F. T &lt;- FALSE is legal and will quietly break things later.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#wide-and-long",
-    "href": "sessions/04-working-with-data/index.html#wide-and-long",
-    "title": "4 · Working with data, and drawing it",
-    "section": "Wide and long",
-    "text": "Wide and long\nOur second file has one row per person and three reaction-time columns:\n\nstroop &lt;- read.csv(\"data/stroop-rm.csv\")\nhead(stroop, 3)\n\n\n  \n\n\nnrow(stroop)\n\n[1] 36\n\n\nThat is wide format. Most modelling functions want long format: one row per observation, with a column saying which condition it came from. You could build it by hand with what you already know:\n\nlong_manual &lt;- rbind(\n  data.frame(id = stroop$id, condition = \"congruent\",   rt = stroop$rt_congruent),\n  data.frame(id = stroop$id, condition = \"neutral\",     rt = stroop$rt_neutral),\n  data.frame(id = stroop$id, condition = \"incongruent\", rt = stroop$rt_incongruent)\n)\nnrow(long_manual)\n\n[1] 108\n\nhead(long_manual, 3)\n\n\n  \n\n\n\n36 people × 3 conditions = 108 rows. reshape() does it in one call:\n\nlong &lt;- reshape(stroop,\n                direction = \"long\",\n                varying   = c(\"rt_congruent\", \"rt_neutral\", \"rt_incongruent\"),\n                v.names   = \"rt\",\n                timevar   = \"condition\",\n                times     = c(\"congruent\", \"neutral\", \"incongruent\"),\n                idvar     = \"id\")\nrownames(long) &lt;- NULL\nhead(long, 3)\n\n\n  \n\n\nnrow(long)\n\n[1] 108\n\n\n\n\n\n\n\n\nTip\n\n\n\nreshape() is the least friendly function in base R. Nobody memorises its arguments — copy this call and change the names. (tidyr::pivot_longer() is the modern alternative; the appendix shows it.)\n\n\n\nJoining the two files\nstroop-rm.csv has no group column, on purpose. merge() attaches it from the cohort file, matching on id:\n\nlong &lt;- merge(long, memclinic[, c(\"id\", \"group\", \"age\")], by = \"id\")\nhead(long, 3)\n\n\n  \n\n\ntapply(long$rt, long$condition, mean)\n\n  congruent incongruent     neutral \n   423.9167    542.8889    452.8889 \n\n\nReaction time rises from congruent to neutral to incongruent — the Stroop effect.",
+    "objectID": "sessions/01-r-basics/index.html#everything-is-an-object",
+    "href": "sessions/01-r-basics/index.html#everything-is-an-object",
+    "title": "1 · Basics of R",
+    "section": "Everything is an object",
+    "text": "Everything is an object\n\n“To understand computations in R, two slogans are helpful: Everything that exists is an object. Everything that happens is a function call.” — John Chambers\n\nA name does not contain a value; it is bound to one. y &lt;- 2 * sqrt(177) + 3 does not create an object called y — it binds the label y to a stored number.\n\ny1 &lt;- y &lt;- 2 * sqrt(177) + 3\ny; y1\n\n[1] 29.60827\n\n\n[1] 29.60827\n\n\nThat is two names pointing at one object, not two objects.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#the-other-way-to-draw-this",
-    "href": "sessions/04-working-with-data/index.html#the-other-way-to-draw-this",
-    "title": "4 · Working with data, and drawing it",
-    "section": "The other way to draw this",
-    "text": "The other way to draw this\nEvery regression script in this course uses ggplot2, so it is worth seeing the same picture in both dialects. The professor’s own comment in Regression1.R is “better graphic facilities with ggplot package”.\n\nlibrary(ggplot2)      # notice the masking message\n\nggplot(memclinic, aes(x = hippo_vol_mm3, y = stroop_cost_ms)) +\n  geom_point(alpha = .6) +\n  geom_smooth(method = \"lm\", se = FALSE) +\n  labs(x = \"Hippocampal volume (mm³)\",\n       y = \"Stroop interference cost (ms)\")\n\n\n\n\n\n\n\n\nThree ideas and that is enough for now: aes() says which variable maps to which part of the picture, each geom_ adds a layer, and layers are joined with +. You do not need it here, but every regression script in the course uses it, so it is worth having seen once.",
+    "objectID": "sessions/01-r-basics/index.html#the-help-system",
+    "href": "sessions/01-r-basics/index.html#the-help-system",
+    "title": "1 · Basics of R",
+    "section": "The help system",
+    "text": "The help system\n\n?mean                  # help for a function you can name\nhelp(mean)             # the same thing\n??regression           # search for a topic\napropos(\"mean\")        # functions whose name contains \"mean\"\nexample(seq)           # run the examples from the help page\n\nHelp pages have several sections. At this stage you need Arguments (what you can pass in) and Examples (at the bottom, ready to copy).",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#exercises",
-    "href": "sessions/04-working-with-data/index.html#exercises",
-    "title": "4 · Working with data, and drawing it",
+    "objectID": "sessions/01-r-basics/index.html#packages",
+    "href": "sessions/01-r-basics/index.html#packages",
+    "title": "1 · Basics of R",
+    "section": "Packages",
+    "text": "Packages\n\ninstall.packages(\"psych\", dependencies = TRUE)   # once per computer\nlibrary(psych)                                   # once per session\ninstalled.packages()                             # what is installed\npackageVersion(\"psych\")\ndetach(package:psych)                            # unload it\n\n\n\n\n\n\n\nWarning\n\n\n\nDo not use remove.packages() to unload a package — that deletes it. Use detach().\n\n\nLoading a package puts its functions on the search path:\n\nsearch()\n\n[1] \".GlobalEnv\"        \"package:stats\"     \"package:graphics\" \n[4] \"package:grDevices\" \"package:utils\"     \"package:datasets\" \n[7] \"package:methods\"   \"Autoloads\"         \"package:base\"     \n\n\nEnvironments, in the lecture’s phrase, are “bags of names”. The Global Environment — your workspace — is the first one. When two packages define the same function name, the one loaded later masks the earlier one, and R tells you so. pkg::fun() sidesteps the question entirely.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#the-workspace",
+    "href": "sessions/01-r-basics/index.html#the-workspace",
+    "title": "1 · Basics of R",
+    "section": "The workspace",
+    "text": "The workspace\n\na &lt;- 10; b &lt;- 1:10\nls()          # what is here\n\n[1] \"a\"             \"b\"             \"reaction_time\" \"rt2\"          \n[5] \"x\"             \"y\"             \"y1\"           \n\nls.str()      # ... and what each thing is\n\na :  num 10\nb :  int [1:10] 1 2 3 4 5 6 7 8 9 10\nreaction_time :  num 412\nrt2 :  num 412\nx :  int [1:10] 1 2 3 4 5 6 7 8 9 10\ny :  num 29.6\ny1 :  num 29.6\n\n\n\nrm(a)         # remove one object\nls()\n\n[1] \"b\"             \"reaction_time\" \"rt2\"           \"x\"            \n[5] \"y\"             \"y1\"           \n\nrm(list = ls())   # remove EVERYTHING\nls()\n\ncharacter(0)\n\n\nrm(list = ls()) opens almost every script in this course. Now you know it just deleted your work — and that you should not put it in a script you hand to someone else.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#working-directories",
+    "href": "sessions/01-r-basics/index.html#working-directories",
+    "title": "1 · Basics of R",
+    "section": "Working directories",
+    "text": "Working directories\nR always has one current working directory, and relative paths are interpreted from it.\n\ngetwd()          # where am I\nlist.files()     # what is here\nlist.files(\"data\")\n\nThe lecture sets this with setwd(\"C:/Somewhere/DirectoryName\"). Note that forward slashes work on every system, and a single backslash does not.\nIn this course you will not need setwd() at all. Every practical folder contains an .Rproj file; opening it sets the working directory to that folder. That is better than setwd() because the path is not written into the script, so the same script works on your computer and on mine.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#reading-data",
+    "href": "sessions/01-r-basics/index.html#reading-data",
+    "title": "1 · Basics of R",
+    "section": "Reading data",
+    "text": "Reading data\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\nThe lecture lists the main readers:\n\n\n\n\n\n\n\nFunction\nFor\n\n\n\n\nread.table(file, header = TRUE, sep = \"\\t\")\ngeneral text files\n\n\nread.csv(file)\ncomma-separated, decimal point\n\n\nread.csv2(file)\nsemicolon-separated, decimal comma — the common European export\n\n\nreadxl::read_excel(file)\nExcel\n\n\ndata(name, package = )\na dataset that ships with a package\n\n\n\nWe use read.csv() because these files are comma-separated with decimal points. If you ever open one in Excel on an Italian system and save it, you will need read.csv2() instead — which is a good reason not to open it in Excel.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#str-is-your-best-friend",
+    "href": "sessions/01-r-basics/index.html#str-is-your-best-friend",
+    "title": "1 · Basics of R",
+    "section": "str() is your best friend",
+    "text": "str() is your best friend\nThe lecture says it twice, so it is worth repeating: learn str(). It tells you what any object actually is.\n\nstr(memclinic)\n\n'data.frame':   180 obs. of  10 variables:\n $ id            : chr  \"P059\" \"P102\" \"P019\" \"P001\" ...\n $ group         : chr  \"HC\" \"MCI\" \"HC\" \"HC\" ...\n $ age           : int  71 66 64 74 58 61 76 71 57 73 ...\n $ sex           : chr  \"M\" \"M\" \"F\" \"F\" ...\n $ educ_years    : int  12 12 16 12 12 5 11 13 13 13 ...\n $ moca          : int  30 24 28 28 24 28 20 18 20 19 ...\n $ hippo_vol_mm3 : int  3801 3546 4411 3871 3570 3507 2971 3190 3408 2977 ...\n $ stroop_cost_ms: int  64 129 42 56 123 158 174 154 88 184 ...\n $ rt_mean       : int  387 403 338 360 404 353 492 484 412 446 ...\n $ csf_ptau      : num  14.8 38.2 19.5 16.1 21.4 15.1 71.5 36.1 17.7 33.1 ...\n\n\n180 people assessed at a memory clinic — healthy controls, mild cognitive impairment, and early Alzheimer’s disease — with MRI and cognitive measures. The codebook explains every column.\n\nhead(memclinic, 3)\n\n\n  \n\n\ndim(memclinic)\n\n[1] 180  10\n\nsummary(memclinic$moca)\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n  16.00   20.00   25.00   24.25   28.00   30.00 \n\n\nWhat a data frame is made of is the subject of practical 3. For now it is a table you can look at.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/01-r-basics/index.html#exercises",
+    "href": "sessions/01-r-basics/index.html#exercises",
+    "title": "1 · Basics of R",
     "section": "Exercises",
-    "text": "Exercises\n\nExercise 1 — find the extreme cases\nPull out the most impaired patients, then look at the extremes of hippocampal volume across the whole cohort.\n\n\nsevere &lt;- subset(memclinic, group == \"___\" & moca &lt; ___)\nnrow(severe)\n\nsevere[order(severe$___), c(\"id\", \"moca\", \"hippo_vol_mm3\")]\n\nbiggest &lt;- memclinic[order(-memclinic$hippo_vol_mm3), ]\nhead(biggest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 5)\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsevere &lt;- subset(memclinic, group == \"AD\" & moca &lt; 20)\nnrow(severe)\n\n[1] 36\n\nsevere[order(severe$moca), c(\"id\", \"moca\", \"hippo_vol_mm3\")]\n\n\n  \n\n\nbiggest &lt;- memclinic[order(-memclinic$hippo_vol_mm3), ]\nhead(biggest[, c(\"id\", \"group\", \"hippo_vol_mm3\")], 5)\n\n\n  \n\n\n\nThe people with the largest hippocampal volumes are controls and the smallest tend to be AD patients — but the lists are not pure. The groups overlap, which is exactly why the boxplots overlap too, and why no single measurement diagnoses anyone.\n\n\n\n\n\nExercise 2 — a clinical flag, and the reference level\nCreate a screening flag, then put the factor levels in clinical order and look at what happens to the model.\n\n\nmemclinic$flag &lt;- ifelse(memclinic$moca &lt; 26, \"___\", \"___\")\ntable(memclinic$flag, memclinic$group)\n\nmemclinic$group &lt;- factor(memclinic$group,\n                          levels = c(\"___\", \"___\", \"___\"))\nlevels(memclinic$group)\n\ncoef(lm(moca ~ group, data = memclinic))\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nmemclinic$flag &lt;- ifelse(memclinic$moca &lt; 26, \"screen positive\", \"screen negative\")\ntable(memclinic$flag, memclinic$group)\n\n                 \n                  HC MCI AD\n  screen negative 57  26  0\n  screen positive  3  34 60\n\nmemclinic$group &lt;- factor(memclinic$group, levels = c(\"HC\", \"MCI\", \"AD\"))\nlevels(memclinic$group)\n\n[1] \"HC\"  \"MCI\" \"AD\" \n\ncoef(lm(moca ~ group, data = memclinic))\n\n(Intercept)    groupMCI     groupAD \n   28.38333    -3.20000    -9.20000 \n\n\nAlmost every AD patient screens positive, most MCI patients do, and a minority of controls do — which is what a screening instrument with a cut-off looks like.\nThe model is the more important half. The intercept, 28.38, is the mean MoCA of the reference group, now HC. groupMCI of −3.20 and groupAD of −9.20 are the amounts by which those groups fall below it.\nThis is the whole of practical 6 in four lines: a comparison between groups is a regression on a factor, and which group the intercept describes is entirely up to the order of the levels.\n\n\n\n\n\nExercise 3 — summarise by group\n\n\ntapply(memclinic$hippo_vol_mm3, memclinic$___, mean)\n\naggregate(cbind(hippo_vol_mm3, csf_ptau) ~ ___, data = memclinic, FUN = ___)\n\npsych::describe(memclinic[, c(\"___\", \"___\")])\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\ntapply(memclinic$hippo_vol_mm3, memclinic$group, mean)\n\n      HC      MCI       AD \n3865.400 3481.233 3108.250 \n\naggregate(cbind(hippo_vol_mm3, csf_ptau) ~ group, data = memclinic, FUN = mean)\n\n\n  \n\n\npsych::describe(memclinic[, c(\"hippo_vol_mm3\", \"csf_ptau\")])\n\n\n  \n\n\n\nBoth measures change steadily across the groups, in opposite directions: volume falls from HC to AD, p-tau rises.\ndescribe() also shows that csf_ptau has a large positive skew while hippo_vol_mm3 has almost none. That is not an accident of sampling — the codebook records that p-tau was generated from a lognormal distribution, as real assay values are. It matters, because several methods later in the course assume roughly symmetric residuals.\n\n\n\n\n\nExercise 4 — three plots\nDraw a histogram, a boxplot and a scatterplot, each with readable axis labels.\n\n\nhist(memclinic$___,\n     breaks = 20,\n     main   = \"___\",\n     xlab   = \"___\")\n\nboxplot(___ ~ ___, data = memclinic,\n        xlab = \"Diagnosis\",\n        ylab = \"___\")\n\nplot(memclinic$age, memclinic$hippo_vol_mm3,\n     pch  = 16,\n     col  = \"grey40\",\n     xlab = \"___\",\n     ylab = \"___\")\nabline(lm(___ ~ ___, data = memclinic), col = \"blue\")\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nhist(memclinic$rt_mean,\n     breaks = 20,\n     main   = \"Mean simple reaction time\",\n     xlab   = \"RT (ms)\")\n\n\n\n\n\n\n\nboxplot(moca ~ group, data = memclinic,\n        xlab = \"Diagnosis\",\n        ylab = \"MoCA score\")\n\n\n\n\n\n\n\nplot(memclinic$age, memclinic$hippo_vol_mm3,\n     pch  = 16,\n     col  = \"grey40\",\n     xlab = \"Age (years)\",\n     ylab = \"Hippocampal volume (mm³)\")\nabline(lm(hippo_vol_mm3 ~ age, data = memclinic), col = \"blue\")\n\n\n\n\n\n\n\n\nThe boxplots run HC, MCI, AD because of Exercise 2 — with the default alphabetical levels they would have come out AD, HC, MCI.\nThe fitted line on the last plot slopes downward: hippocampal volume falls with age. Estimating that slope properly — it is about −12 mm³ per year — is what lm() does in the Regression 1 lecture.\n\n\n\n\n\nExercise 5 — wide to long\n\n\nstroop &lt;- read.csv(\"data/___.csv\")\nnrow(stroop)\n\nlong &lt;- reshape(stroop,\n                direction = \"long\",\n                varying   = c(\"rt_congruent\", \"rt_neutral\", \"rt_incongruent\"),\n                v.names   = \"rt\",\n                timevar   = \"condition\",\n                times     = c(\"congruent\", \"neutral\", \"incongruent\"),\n                idvar     = \"id\")\nrownames(long) &lt;- NULL\nnrow(long)\n\nlong &lt;- merge(long, memclinic[, c(\"id\", \"group\")], by = \"___\")\ntapply(long$rt, long$condition, ___)\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nstroop &lt;- read.csv(\"data/stroop-rm.csv\")\nnrow(stroop)\n\n[1] 36\n\nlong &lt;- reshape(stroop,\n                direction = \"long\",\n                varying   = c(\"rt_congruent\", \"rt_neutral\", \"rt_incongruent\"),\n                v.names   = \"rt\",\n                timevar   = \"condition\",\n                times     = c(\"congruent\", \"neutral\", \"incongruent\"),\n                idvar     = \"id\")\nrownames(long) &lt;- NULL\nnrow(long)\n\n[1] 108\n\nlong &lt;- merge(long, memclinic[, c(\"id\", \"group\")], by = \"id\")\ntapply(long$rt, long$condition, mean)\n\n  congruent incongruent     neutral \n   423.9167    542.8889    452.8889 \n\n\n36 rows became 108, and the condition means rise from congruent to incongruent.\nThe two files describe the same people, so the interference cost should be recoverable from the reaction times:\n\ncheck &lt;- merge(stroop, memclinic[, c(\"id\", \"stroop_cost_ms\")], by = \"id\")\nrecovered &lt;- check$rt_incongruent - check$rt_congruent\nround(cor(recovered, check$stroop_cost_ms), 3)\n\n[1] 0.973\n\n\nThey correlate about .97 rather than matching exactly, because noise was added to each condition separately — which is what happens when you measure the same quantity twice.\nPractical 6 needs this long shape: a repeated-measures analysis written as aov(rt ~ condition + Error(id/condition)) cannot be expressed against the wide table at all.",
+    "text": "Exercises\n\n\n\n\n\n\nNote\n\n\n\nFill in each ___, and run the lines one at a time with Ctrl+Enter.\n\n\n\nExercise 1 — the calculator, and its limits\n\n\n# A reaction time of 412 ms, expressed in seconds\n412 / ___\n\n# Two ways of getting the same number\n0.1 + 0.2\n0.3\n\n# Are they equal?\n0.1 + 0.2 == ___\nprint(0.1 + 0.2, digits = 22)\ndplyr::near(0.1 + 0.2, ___)\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\n412 / 1000\n\n[1] 0.412\n\n0.1 + 0.2\n\n[1] 0.3\n\n0.3\n\n[1] 0.3\n\n0.1 + 0.2 == 0.3\n\n[1] FALSE\n\nprint(0.1 + 0.2, digits = 22)\n\n[1] 0.3000000000000000444089\n\ndplyr::near(0.1 + 0.2, 0.3)\n\n[1] TRUE\n\n\n0.1 + 0.2 is not exactly 0.3, because neither 0.1 nor 0.2 has an exact binary representation — just as 1/3 has no exact decimal one. Printing to 22 digits shows the discrepancy.\nThis matters whenever you compare computed numbers. Use dplyr::near(), or all.equal(), never ==.\n\n\n\n\n\nExercise 2 — assignment, and what it leaves behind\n\n\nrm(list = ls())\n\n# Store a participant's age, then print it in one line\n(age &lt;- ___)\n\n# Which of these creates a variable? Check with ls() after each.\nmean(x = 1:20)\nls()\n\nmean(x &lt;- 1:20)\n___()\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nrm(list = ls())\n\n(age &lt;- 72)\n\n[1] 72\n\nmean(x = 1:20)\n\n[1] 10.5\n\nls()\n\n[1] \"age\"\n\nmean(x &lt;- 1:20)\n\n[1] 10.5\n\nls()\n\n[1] \"age\" \"x\"  \n\n\nThe first call uses x as the name of an argument, so nothing is stored. The second uses &lt;- inside the call, which computes the mean and leaves an object x in the workspace.\nBoth print 10.5, so the output gives you no clue. ls() does.\n\n\n\n\n\nExercise 3 — find your way around the help\nUse the help system to answer these without guessing.\n\n\n?round\n# What is the second argument of round() called?\nround(3.14159, digits = ___)\n\n?seq\n# Produce the numbers 0, 5, 10, ..., 100 using the `by` argument\nseq(from = 0, to = ___, by = ___)\n\n# Produce exactly 5 evenly spaced numbers between 0 and 1\nseq(from = 0, to = 1, length.out = ___)\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nround(3.14159, digits = 2)\n\n[1] 3.14\n\nseq(from = 0, to = 100, by = 5)\n\n [1]   0   5  10  15  20  25  30  35  40  45  50  55  60  65  70  75  80  85  90\n[20]  95 100\n\nseq(from = 0, to = 1, length.out = 5)\n\n[1] 0.00 0.25 0.50 0.75 1.00\n\n\nThe second argument of round() is digits. seq() has several ways to specify a sequence — by sets the step, length.out sets how many values you want and lets R work out the step. The Arguments section of ?seq lists them all; you are not expected to remember them.\n\n\n\n\n\nExercise 4 — the workspace and the data\n\n\nrm(list = ls())\n\nmemclinic &lt;- read.csv(\"data/___.csv\")\n\nstr(memclinic)\ndim(memclinic)\nnames(memclinic)\nhead(memclinic, ___)\n\nls()                     # what is in the workspace now?\nsummary(memclinic$___)   # summarise the MoCA scores\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nrm(list = ls())\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\nstr(memclinic)\n\n'data.frame':   180 obs. of  10 variables:\n $ id            : chr  \"P059\" \"P102\" \"P019\" \"P001\" ...\n $ group         : chr  \"HC\" \"MCI\" \"HC\" \"HC\" ...\n $ age           : int  71 66 64 74 58 61 76 71 57 73 ...\n $ sex           : chr  \"M\" \"M\" \"F\" \"F\" ...\n $ educ_years    : int  12 12 16 12 12 5 11 13 13 13 ...\n $ moca          : int  30 24 28 28 24 28 20 18 20 19 ...\n $ hippo_vol_mm3 : int  3801 3546 4411 3871 3570 3507 2971 3190 3408 2977 ...\n $ stroop_cost_ms: int  64 129 42 56 123 158 174 154 88 184 ...\n $ rt_mean       : int  387 403 338 360 404 353 492 484 412 446 ...\n $ csf_ptau      : num  14.8 38.2 19.5 16.1 21.4 15.1 71.5 36.1 17.7 33.1 ...\n\ndim(memclinic)\n\n[1] 180  10\n\nnames(memclinic)\n\n [1] \"id\"             \"group\"          \"age\"            \"sex\"           \n [5] \"educ_years\"     \"moca\"           \"hippo_vol_mm3\"  \"stroop_cost_ms\"\n [9] \"rt_mean\"        \"csf_ptau\"      \n\nhead(memclinic, 3)\n\n\n  \n\n\nls()\n\n[1] \"memclinic\"\n\nsummary(memclinic$moca)\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n  16.00   20.00   25.00   24.25   28.00   30.00 \n\n\n180 rows and 10 columns, and the only thing in the workspace is memclinic itself — reading a file creates one object.\nstr() reports chr for id, group and sex. Those are text, not categories, as far as R is concerned; turning them into proper categorical variables is the subject of practical 2.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#what-to-take-away",
-    "href": "sessions/04-working-with-data/index.html#what-to-take-away",
-    "title": "4 · Working with data, and drawing it",
+    "objectID": "sessions/01-r-basics/index.html#what-to-take-away",
+    "href": "sessions/01-r-basics/index.html#what-to-take-away",
+    "title": "1 · Basics of R",
     "section": "What to take away",
-    "text": "What to take away\n\nIn df[rows, columns], the comma is what separates the two. One column with a comma gives a vector, not a table.\nifelse() for two outcomes, dplyr::case_when() for more, first match wins.\nA factor’s levels are alphabetical unless you set them. The first level is the baseline every model compares against.\ntapply() and aggregate() summarise within groups.\nLabel your axes.\nWide is for reading, long is for modelling.",
+    "text": "What to take away\n\n&lt;- makes a variable, = names an argument. They are not interchangeable.\nNever compare decimals with ==.\nls() shows your workspace, rm(list = ls()) empties it.\nOpen the .Rproj; this way, you don’t need to use setwd().\nWhen anything surprises you, run str() on it.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
     ]
   },
   {
-    "objectID": "sessions/04-working-with-data/index.html#going-further",
-    "href": "sessions/04-working-with-data/index.html#going-further",
-    "title": "4 · Working with data, and drawing it",
+    "objectID": "sessions/01-r-basics/index.html#going-further",
+    "href": "sessions/01-r-basics/index.html#going-further",
+    "title": "1 · Basics of R",
     "section": "Going further",
-    "text": "Going further\nThe appendix for this session covers loops and the apply family, pipes, graphics in more depth including saving figures to file, the other ways to reshape, and how merge() can silently duplicate your rows.",
+    "text": "Going further\nThe appendix covers names and memory, environments and masking, attach()/detach(), saving and loading objects, and floating point in more detail.",
     "crumbs": [
       "Start here",
       "Practicals",
-      "4 · Working with data, and drawing it"
+      "1 · Basics of R"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html",
+    "href": "sessions/03-lists-dataframes-functions/index.html",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "",
+    "text": "Note⬇ Download this practical\n\n\n\nA zip containing the R script, the data, and an .Rproj file. Unzip it somewhere you can find again, then double-click the .Rproj.\nOptional extra practice alongside Introduction to R — Part 3. It does not replace the lecture, and nothing here is assessed.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#what-you-will-be-able-to-do",
+    "href": "sessions/03-lists-dataframes-functions/index.html#what-you-will-be-able-to-do",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "What you will be able to do",
+    "text": "What you will be able to do\n\nbuild a list, and pick things out of it with [, [[ and $;\nexplain why a data frame is a list, and what follows from that;\nread the output of str() on a fitted model;\nwrite if, ifelse() and for, and say when you do not need a loop;\nwrite a function, with arguments and a return value.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#before-you-start",
+    "href": "sessions/03-lists-dataframes-functions/index.html#before-you-start",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Before you start",
+    "text": "Before you start\n\n\n\n\n\n\nImportantOpen the .Rproj first, and run one line at a time\n\n\n\nDouble-click the .Rproj in this folder, then use Ctrl+Enter (Cmd+Enter on a Mac). Do not press Source while a ___ blank remains.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#lists",
+    "href": "sessions/03-lists-dataframes-functions/index.html#lists",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Lists",
+    "text": "Lists\nA list is a generic vector: a collection of components that can be objects of different types, and of different lengths.\n\n(lis1 &lt;- list(1:5, c(\"a\", \"b\"), c(TRUE, FALSE, TRUE), 2.3))\n\n[[1]]\n[1] 1 2 3 4 5\n\n[[2]]\n[1] \"a\" \"b\"\n\n[[3]]\n[1]  TRUE FALSE  TRUE\n\n[[4]]\n[1] 2.3\n\n\n\nstr(lis1)\n\nList of 4\n $ : int [1:5] 1 2 3 4 5\n $ : chr [1:2] \"a\" \"b\"\n $ : logi [1:3] TRUE FALSE TRUE\n $ : num 2.3\n\ntypeof(lis1)\n\n[1] \"list\"\n\nis.list(lis1)\n\n[1] TRUE\n\n\nComponents are usually named:\n\npatient &lt;- list(id      = \"P042\",\n                age     = 71,\n                group   = \"MCI\",\n                scores  = c(moca = 24, stroop = 118))\nstr(patient)\n\nList of 4\n $ id    : chr \"P042\"\n $ age   : num 71\n $ group : chr \"MCI\"\n $ scores: Named num [1:2] 24 118\n  ..- attr(*, \"names\")= chr [1:2] \"moca\" \"stroop\"\n\n\nA list can contain a list, which makes it a recursive object — and is how every complicated thing in R is built.\n\n\n\n\n\n\nWarningBeware the relation between c() and lists\n\n\n\n\nlis2 &lt;- list(list(1, \"a\"), c(TRUE, FALSE))    # a list of 2\nlis3 &lt;- c(list(1, \"a\"), c(TRUE, FALSE))       # a list of 4\n\nlength(lis2); length(lis3)\n\n[1] 2\n\n\n[1] 4\n\n\nlist() nests. c() flattens one level. They look almost identical and do different things.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#subsetting-a-list",
+    "href": "sessions/03-lists-dataframes-functions/index.html#subsetting-a-list",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Subsetting a list — [, [[, $",
+    "text": "Subsetting a list — [, [[, $\nThis is the single most confusing thing about lists, and it is worth ten minutes now to save an hour later.\n\npatient[\"age\"]      # SINGLE bracket: a LIST containing age\n\n$age\n[1] 71\n\npatient[[\"age\"]]    # DOUBLE bracket: the value itself\n\n[1] 71\n\npatient$age         # the same as [[ ]], for a named component\n\n[1] 71\n\n\n\nclass(patient[\"age\"])\n\n[1] \"list\"\n\nclass(patient[[\"age\"]])\n\n[1] \"numeric\"\n\n\n[ keeps the container, [[ opens it. The usual image: a list is a train of carriages, [ gives you a shorter train, [[ gives you what is inside one carriage.\n\npatient[c(\"id\", \"group\")]    # several components: still a list\n\n$id\n[1] \"P042\"\n\n$group\n[1] \"MCI\"\n\npatient[-1]                  # drop the first component\n\n$age\n[1] 71\n\n$group\n[1] \"MCI\"\n\n$scores\n  moca stroop \n    24    118 \n\npatient[[\"scores\"]][\"moca\"]  # into a component, then inside it\n\nmoca \n  24 \n\npatient$scores[\"moca\"]       # the same\n\nmoca \n  24 \n\n\nunlist() flattens the whole thing to a vector — note the coercion:\n\nunlist(patient)\n\n           id           age         group   scores.moca scores.stroop \n       \"P042\"          \"71\"         \"MCI\"          \"24\"         \"118\"",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#data-frames-are-lists",
+    "href": "sessions/03-lists-dataframes-functions/index.html#data-frames-are-lists",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Data frames are lists",
+    "text": "Data frames are lists\n\nMatrices are built on top of vectors with a dim attribute. Factors are built on top of vectors with class and levels. Dataframes are built on top of lists.\n\nA data frame is a named list of vectors, all of the same length, with three attributes: names, class, and row.names.\n\nage   &lt;- c(72, 68, 81, 74, 69)\nsex   &lt;- c(\"M\", \"F\", \"F\", \"M\", \"F\")\ngroup &lt;- c(\"HC\", \"MCI\", \"AD\", \"HC\", \"MCI\")\n\n(df1 &lt;- data.frame(age = age, sex = sex, group = group))\n\n\n  \n\n\n\n\nstr(df1)\n\n'data.frame':   5 obs. of  3 variables:\n $ age  : num  72 68 81 74 69\n $ sex  : chr  \"M\" \"F\" \"F\" \"M\" ...\n $ group: chr  \"HC\" \"MCI\" \"AD\" \"HC\" ...\n\nattributes(df1)\n\n$names\n[1] \"age\"   \"sex\"   \"group\"\n\n$class\n[1] \"data.frame\"\n\n$row.names\n[1] 1 2 3 4 5\n\ntypeof(df1)      # a list!\n\n[1] \"list\"\n\nclass(df1)       # ... labelled data.frame\n\n[1] \"data.frame\"\n\n\nWhich means all the list subsetting you just learned applies:\n\nlength(df1)      # the number of COLUMNS\n\n[1] 3\n\ndf1[1]           # a data frame with one column\n\n\n  \n\n\ndf1[[1]]         # the column itself, as a vector\n\n[1] 72 68 81 74 69\n\ndf1$age          # the same\n\n[1] 72 68 81 74 69\n\n\nBut a data frame also has the properties of a matrix, so [row, column] works too:\n\ndim(df1); nrow(df1); ncol(df1)\n\n[1] 5 3\n\n\n[1] 5\n\n\n[1] 3\n\ncolnames(df1)\n\n[1] \"age\"   \"sex\"   \"group\"\n\ndf1[2, ]          # second row\n\n\n  \n\n\ndf1[, \"age\"]      # the age column\n\n[1] 72 68 81 74 69\n\ndf1[2, \"age\"]     # one cell\n\n[1] 68\n\n\nThat double nature — list and matrix at once — is what makes a data frame the right object for a dataset.\n\n\n\n\n\n\nWarningstringsAsFactors\n\n\n\n\nis.factor(df1$sex)\n\n[1] FALSE\n\n\nSince R 4.0.0 text columns stay as text. Older code and older textbooks assume the opposite. Convert explicitly when you need a factor.\n\n\n\nsummary() behaves differently on factors\n\nsummary(df1)\n\n      age           sex               group          \n Min.   :68.0   Length:5           Length:5          \n 1st Qu.:69.0   Class :character   Class :character  \n Median :72.0   Mode  :character   Mode  :character  \n Mean   :72.8                                        \n 3rd Qu.:74.0                                        \n Max.   :81.0                                        \n\n\nsex and group report Length / Class / Mode, which tells you nothing. Turn them into factors and the same call counts them:\n\ndf1_F &lt;- as.data.frame(unclass(df1), stringsAsFactors = TRUE)\nsummary(df1_F)\n\n      age       sex   group  \n Min.   :68.0   F:3   AD :1  \n 1st Qu.:69.0   M:2   HC :2  \n Median :72.0         MCI:2  \n Mean   :72.8                \n 3rd Qu.:74.0                \n Max.   :81.0                \n\n\n\n\nAdding columns and combining frames\n\ndf1$moca &lt;- c(29, 24, 17, 28, 25)\ndf1$age_z &lt;- with(df1, scale(age))    # with() saves repeating df1$\nstr(df1)\n\n'data.frame':   5 obs. of  5 variables:\n $ age  : num  72 68 81 74 69\n $ sex  : chr  \"M\" \"F\" \"F\" \"M\" ...\n $ group: chr  \"HC\" \"MCI\" \"AD\" \"HC\" ...\n $ moca : num  29 24 17 28 25\n $ age_z: num [1:5, 1] -0.155 -0.929 1.587 0.232 -0.735\n  ..- attr(*, \"scaled:center\")= num 72.8\n  ..- attr(*, \"scaled:scale\")= num 5.17\n\n\n\nextra &lt;- data.frame(age = 77, sex = \"F\", group = \"AD\", moca = 19, age_z = NA)\nrbind(df1, extra)                     # add rows\n\n\n  \n\n\nids &lt;- data.frame(row = 1:5, site = c(\"PD\", \"PD\", \"VR\", \"PD\", \"VR\"))\nhead(cbind(df1, site = ids$site), 3)  # add columns\n\n\n  \n\n\n\nmerge() joins two frames on a shared key, and is covered properly in practical 4.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#tibbles",
+    "href": "sessions/03-lists-dataframes-functions/index.html#tibbles",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Tibbles",
+    "text": "Tibbles\nA tibble is a modern data frame from the tidyverse, which drops some of the older idiosyncrasies and prints more helpfully — it borrows the type information from str() and puts it in the printout.\n\n(tib0 &lt;- tibble::tibble(x    = 1:3,\n                        y    = 1,\n                        z    = x^2 + y,\n                        name = letters[1:3]))\n\n\n  \n\n\n\n\nclass(tib0)\n\n[1] \"tbl_df\"     \"tbl\"        \"data.frame\"\n\ntibble::is_tibble(tib0)\n\n[1] TRUE\n\n\nNote y = 1 was recycled, and z could be defined using x and y in the same call — neither works in data.frame(). A tibble is still a data frame: [, [[ and $ all behave as you expect.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#control-flow",
+    "href": "sessions/03-lists-dataframes-functions/index.html#control-flow",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Control flow",
+    "text": "Control flow\n\nChoices\n\nscore &lt;- 24\nif (score &lt; 26) {\n  print(\"below the screening cut-off\")\n} else {\n  print(\"within normal limits\")\n}\n\n[1] \"below the screening cut-off\"\n\n\nif() takes one condition. For a whole vector, use the vectorised ifelse():\n\nx &lt;- 1:8\nifelse(x %% 2 == 0, \"even\", \"odd\")\n\n[1] \"odd\"  \"even\" \"odd\"  \"even\" \"odd\"  \"even\" \"odd\"  \"even\"\n\n\n\nmoca &lt;- c(29, 24, 18, 27)\ndplyr::case_when(\n  moca &gt;= 26 ~ \"normal\",\n  moca &gt;= 20 ~ \"mild\",\n  TRUE       ~ \"moderate-severe\"\n)\n\n[1] \"normal\"          \"mild\"            \"moderate-severe\" \"normal\"         \n\n\ncase_when() replaces nested ifelse(). The conditions are evaluated in the order you write them, and the first match wins, so &gt;= 26 must come before &gt;= 20. The final TRUE is the catch-all.\n\n\nLoops\n\nfor (i in 1:4) print(i)\n\n[1] 1\n[1] 2\n[1] 3\n[1] 4\n\n\n\nfor (g in c(\"HC\", \"MCI\", \"AD\")) {\n  cat(g, \"\\n\")\n}\n\nHC \nMCI \nAD \n\n\nnext skips to the next iteration, break leaves the loop:\n\nfor (i in 1:10) {\n  if (i &lt; 2) next\n  if (i &gt; 6) break\n  cat(i, \"\")\n}\n\n2 3 4 5 6 \n\n\n\nx &lt;- 0\nwhile (x &lt; 4) { x &lt;- x + 1 }\nx\n\n[1] 4\n\nx &lt;- 0\nrepeat { x &lt;- x + 1; if (x == 4) break }\nx\n\n[1] 4\n\n\nwhile tests the condition before each pass, repeat runs until you break out. There is no do-while statement in R.\n\n\n\n\n\n\nWarningPitfalls in loops\n\n\n\n\nPreallocate — growing a vector each pass makes R copy it each time.\nLoops can strip attributes from vectors.\nVectorise rather than nesting loops.\n1:length(x) fails on an empty vector. Use seq_along(x):\n\n\nx &lt;- numeric(0)\n1:length(x)      # counts DOWN from 1 to 0 -- two iterations on nothing\n\n[1] 1 0\n\nseq_along(x)     # empty, as it should be\n\ninteger(0)",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#functions",
+    "href": "sessions/03-lists-dataframes-functions/index.html#functions",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Functions",
+    "text": "Functions\nIn data analysis, functions are how you call statistical methods — and they typically return a list holding both results and details.\n\nttestex &lt;- t.test(1:100, mu = 70)\nclass(ttestex)\n\n[1] \"htest\"\n\nnames(ttestex)\n\n [1] \"statistic\"   \"parameter\"   \"p.value\"     \"conf.int\"    \"estimate\"   \n [6] \"null.value\"  \"stderr\"      \"alternative\" \"method\"      \"data.name\"  \n\n\n\nttestex$p.value\n\n[1] 1.159984e-09\n\nttestex$conf.int\n\n[1] 44.74349 56.25651\nattr(,\"conf.level\")\n[1] 0.95\n\n\nEverything printed in a test result is a component you can pull out by name — which is how you put a number into a report without retyping it.\nThe same is true of a fitted model:\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\nfit &lt;- lm(stroop_cost_ms ~ hippo_vol_mm3, data = memclinic)\n\nclass(fit)\n\n[1] \"lm\"\n\nnames(fit)[1:6]\n\n[1] \"coefficients\"  \"residuals\"     \"effects\"       \"rank\"         \n[5] \"fitted.values\" \"assign\"       \n\nfit$coefficients\n\n  (Intercept) hippo_vol_mm3 \n  339.5534002    -0.0641034 \n\n\nclass() is \"lm\", and that label is the whole reason summary(fit) prints a regression table rather than dumping a list. What that table means is the subject of the Regression 1 lecture.\n\nWriting your own\n\nhypo &lt;- function(a, b) {\n  c = sqrt(a^2 + b^2)\n  return(c)\n}\n\nhypo(3, 4)\n\n[1] 5\n\nhypo(a = 3, b = 4)\n\n[1] 5\n\n\nNotice the assignment discipline: &lt;- binds the function to the name, = names arguments at the call site.\nA function has three parts:\n\nformals(hypo)      # its arguments\n\n$a\n\n\n$b\n\nbody(hypo)         # what it does\n\n{\n    c = sqrt(a^2 + b^2)\n    return(c)\n}\n\n\nArguments can have defaults, and the last expression is returned even without return():\n\nz_score &lt;- function(x, na.rm = TRUE) {\n  (x - mean(x, na.rm = na.rm)) / sd(x, na.rm = na.rm)\n}\n\nround(z_score(c(24, 26, 28, 30, 22)), 2)\n\n[1] -0.63  0.00  0.63  1.26 -1.26\n\n\n\n\n\n\n\n\nWarningMistakes can be silent\n\n\n\nBe careful with arguments and their position.\n\nsum(2, 3, 10)\n\n[1] 15\n\nmean(2, 3, 10)\n\n[1] 2\n\nargs(mean)\n\nfunction (x, ...) \nNULL\n\n\nsum() adds everything it is given. mean() takes one vector as its first argument, so mean(2, 3, 10) returns the mean of 2 — and silently ignores the rest. What you meant was mean(c(2, 3, 10)).\n\n\n\nf &lt;- function() { hidden &lt;- 99; hidden }\nf()\n\n[1] 99\n\nexists(\"hidden\")\n\n[1] FALSE\n\n\nWhat happens in the function stays in the function.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#exercises",
+    "href": "sessions/03-lists-dataframes-functions/index.html#exercises",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Exercises",
+    "text": "Exercises\n\nExercise 1 — a list, and the three brackets\n\n\nsession &lt;- list(\n  id        = \"P042\",\n  visit     = ___,\n  scores    = c(moca = 24, stroop = 118, rt = 455),\n  complete  = TRUE\n)\n\nstr(session)\n\nsession[\"scores\"]        # what class is this?\nsession[[\"scores\"]]      # and this?\nclass(session[___])\nclass(session[[___]])\n\nsession$scores[\"moca\"]   # reach inside the component\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nsession &lt;- list(\n  id       = \"P042\",\n  visit    = 2,\n  scores   = c(moca = 24, stroop = 118, rt = 455),\n  complete = TRUE\n)\n\nstr(session)\n\nList of 4\n $ id      : chr \"P042\"\n $ visit   : num 2\n $ scores  : Named num [1:3] 24 118 455\n  ..- attr(*, \"names\")= chr [1:3] \"moca\" \"stroop\" \"rt\"\n $ complete: logi TRUE\n\nsession[\"scores\"]\n\n$scores\n  moca stroop     rt \n    24    118    455 \n\nsession[[\"scores\"]]\n\n  moca stroop     rt \n    24    118    455 \n\nclass(session[\"scores\"])\n\n[1] \"list\"\n\nclass(session[[\"scores\"]])\n\n[1] \"numeric\"\n\nsession$scores[\"moca\"]\n\nmoca \n  24 \n\n\n[ returns a list of length one that contains the scores; [[ returns the named numeric vector itself. That is why class() says list for one and numeric for the other.\nIt matters because a function expecting a vector will fail on session[\"scores\"] with a message about the wrong type, and the two lines look nearly identical on screen.\n\n\n\n\n\nExercise 2 — a data frame is a list\n\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\ntypeof(memclinic)      # what is it made of?\nclass(memclinic)       # what is it labelled as?\nlength(memclinic)      # rows or columns?\nnrow(memclinic)\n\n# The same column, three ways\nhead(memclinic[[\"moca\"]], 3)\nhead(memclinic$___, 3)\nhead(memclinic[, \"___\"], 3)\n\n# And the container version\nclass(memclinic[\"moca\"])\nclass(memclinic[[\"moca\"]])\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nmemclinic &lt;- read.csv(\"data/memclinic.csv\")\n\ntypeof(memclinic)\n\n[1] \"list\"\n\nclass(memclinic)\n\n[1] \"data.frame\"\n\nlength(memclinic)\n\n[1] 10\n\nnrow(memclinic)\n\n[1] 180\n\nhead(memclinic[[\"moca\"]], 3)\n\n[1] 30 24 28\n\nhead(memclinic$moca, 3)\n\n[1] 30 24 28\n\nhead(memclinic[, \"moca\"], 3)\n\n[1] 30 24 28\n\nclass(memclinic[\"moca\"])\n\n[1] \"data.frame\"\n\nclass(memclinic[[\"moca\"]])\n\n[1] \"integer\"\n\n\ntypeof() says list and class() says data.frame: underneath it is a list of ten equal-length vectors, wearing a label that makes R print it as a table.\nlength() is 10, not 180 — the number of components, i.e. columns. For rows you need nrow(). This catches people constantly.\nThe three ways of getting moca are identical. But memclinic[\"moca\"] with a single bracket gives a one-column data frame, not a vector.\n\n\n\n\n\nExercise 3 — recoding with control flow\n\n\n# A binary flag with the vectorised if\nmemclinic$flag &lt;- ifelse(memclinic$moca &lt; ___, \"positive\", \"negative\")\ntable(memclinic$flag)\n\n# Three categories, first match wins\nmemclinic$severity &lt;- dplyr::case_when(\n  memclinic$moca &gt;= 26 ~ \"___\",\n  memclinic$moca &gt;= 20 ~ \"___\",\n  TRUE                 ~ \"moderate-severe\"\n)\ntable(memclinic$severity)\n\n# Why would putting the &gt;= 20 line first be wrong?\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nmemclinic$flag &lt;- ifelse(memclinic$moca &lt; 26, \"positive\", \"negative\")\ntable(memclinic$flag)\n\n\nnegative positive \n      83       97 \n\nmemclinic$severity &lt;- dplyr::case_when(\n  memclinic$moca &gt;= 26 ~ \"normal\",\n  memclinic$moca &gt;= 20 ~ \"mild\",\n  TRUE                 ~ \"moderate-severe\"\n)\ntable(memclinic$severity)\n\n\n           mild moderate-severe          normal \n             61              36              83 \n\n\nIf &gt;= 20 came first, everyone scoring 26 or more would also satisfy it, and because the first matching condition wins they would all be labelled “mild”. The normal group would vanish — and, once again, with no error.\nConditions in case_when() have to run from the most specific to the most general.\n\n\n\n\n\nExercise 4 — write a function\nWrite a function that takes a vector of scores and returns how many fall below a cut-off, with the cut-off as an argument that defaults to 26.\n\n\nn_below &lt;- function(x, cutoff = ___) {\n  sum(x &lt; cutoff, na.rm = TRUE)\n}\n\nn_below(memclinic$moca)\nn_below(memclinic$moca, cutoff = ___)\n\nformals(n_below)\n\n# Now break it on purpose: what does this give, and why?\nmean(24, 26, 28)\nmean(c(24, 26, 28))\n\n\nSolution. \n\n\n\n\n\n\nTipSolution\n\n\n\n\n\n\nn_below &lt;- function(x, cutoff = 26) {\n  sum(x &lt; cutoff, na.rm = TRUE)\n}\n\nn_below(memclinic$moca)\n\n[1] 97\n\nn_below(memclinic$moca, cutoff = 20)\n\n[1] 36\n\nformals(n_below)\n\n$x\n\n\n$cutoff\n[1] 26\n\nmean(24, 26, 28)\n\n[1] 24\n\nmean(c(24, 26, 28))\n\n[1] 26\n\n\n97 people score below 26 and 46 below 20. The default means the common case needs no second argument, while the cut-off is still there when you want it.\nmean(24, 26, 28) returns 24. mean()’s first argument is the whole vector, and the others are matched to trim and na.rm — so it averaged a single number and ignored the rest without complaint. mean(c(24, 26, 28)) returns 26, which is what was meant.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#what-to-take-away",
+    "href": "sessions/03-lists-dataframes-functions/index.html#what-to-take-away",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "What to take away",
+    "text": "What to take away\n\n[ keeps the container, [[ and $ open it.\nA data frame is a list of equal-length columns, wearing a class label. length() counts columns; use nrow() for rows.\nif takes one condition; ifelse() and case_when() take a whole vector.\ncase_when() stops at the first match, so order the conditions from specific to general.\nA statistical function returns a list — everything in a printed result can be pulled out by name.\nCheck the argument order of a function before you trust its answer.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/03-lists-dataframes-functions/index.html#going-further",
+    "href": "sessions/03-lists-dataframes-functions/index.html#going-further",
+    "title": "3 · Lists, data frames, control flow, functions",
+    "section": "Going further",
+    "text": "Going further\nThe appendix covers nested lists and purrr::map(), the apply family, seq_along() and loop pitfalls in depth, anonymous functions, pipes, and lexical scoping.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "3 · Lists, data frames, control flow, functions"
+    ]
+  },
+  {
+    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html",
+    "href": "sessions/05-slr-clinical-neuropsychology/index.html",
+    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
+    "section": "",
+    "text": "Note⬇ Download the R script\n\n\n\nThe script simulates its own data, so it needs nothing else: open it in RStudio and run it line by line.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+    ]
+  },
+  {
+    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#slr-example-cognitive-rehabilitation-and-memory-gain",
+    "href": "sessions/05-slr-clinical-neuropsychology/index.html#slr-example-cognitive-rehabilitation-and-memory-gain",
+    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
+    "section": "SLR Example: Cognitive Rehabilitation and Memory Gain",
+    "text": "SLR Example: Cognitive Rehabilitation and Memory Gain\nContext:\nCognitive rehabilitation is a core intervention in clinical neuropsychology. Patients recovering from acquired brain injury (e.g. stroke, TBI) undergo structured cognitive training programmes aimed at restoring everyday function.\nHere we ask: does the number of completed training hours predict the gain in episodic memory performance observed at the end of rehabilitation? Memory gain is operationalised as the change score on a standardised word-list recall test (post-treatment minus pre-treatment, in raw score points). A positive gain means improvement.\nYou will see:\n\nHow to fit a simple linear regression in R\nHow to interpret the intercept and slope in a clinical context\nHow to reproduce every number in summary() and anova() manually\nHow to run the four standard diagnostic plots\n\n\nlibrary(psych)\nlibrary(ggplot2)\n\n\nAttaching package: 'ggplot2'\n\n\nThe following objects are masked from 'package:psych':\n\n    %+%, alpha\n\nrm(list = ls())",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+    ]
+  },
+  {
+    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#data-generation",
+    "href": "sessions/05-slr-clinical-neuropsychology/index.html#data-generation",
+    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
+    "section": "Data generation",
+    "text": "Data generation\n\nn        &lt;- 15   # small rehabilitation cohort — easy to inspect\nalpha_T  &lt;- 2.0  # true intercept: expected gain with zero training hours (baseline drift)\nbeta_T   &lt;- 0.8  # true slope: each extra training hour gains 0.8 recall points on average\nsd_error &lt;- 3.0  # individual variability around the true line\nmu_x     &lt;- 12   # mean training hours completed across patients\nsigma_x  &lt;- 4    # SD of training hours\n\nset.seed(42)\ntrainingHours &lt;- rnorm(n, mu_x, sigma_x)\nmemoryGain    &lt;- alpha_T + beta_T * trainingHours + rnorm(n, 0, sd_error)\n\ndataRehab &lt;- data.frame(\n  memoryGain    = memoryGain,    # outcome Y  (recall score change, points)\n  trainingHours = trainingHours  # predictor X (hours of cognitive training completed)\n)\n\n# quick look\nstr(dataRehab)\n\n'data.frame':   15 obs. of  2 variables:\n $ memoryGain   : num  17.89 8.94 4.79 6.3 16.85 ...\n $ trainingHours: num  17.48 9.74 13.45 14.53 13.62 ...\n\nhead(dataRehab)\n\n\n  \n\n\npsych::describe(dataRehab)",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+    ]
+  },
+  {
+    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#visualise-the-data",
+    "href": "sessions/05-slr-clinical-neuropsychology/index.html#visualise-the-data",
+    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
+    "section": "Visualise the data",
+    "text": "Visualise the data\n\nwith(dataRehab, plot(trainingHours, memoryGain,\n                     xlab = \"Cognitive training completed (hours)\",\n                     ylab = \"Memory gain (recall score change)\",\n                     main = \"Rehabilitation dose and memory recovery\"))\nabline(lm(memoryGain ~ trainingHours, data = dataRehab), col = \"steelblue\", lwd = 2)\n\n\n\n\n\n\n\nggplot(dataRehab, aes(x = trainingHours, y = memoryGain)) +\n  geom_point(size = 2) +\n  geom_smooth(method = \"lm\", se = TRUE, colour = \"steelblue\") +\n  labs(x = \"Cognitive training completed (hours)\",\n       y = \"Memory gain (recall score change)\",\n       title = \"Does rehabilitation dose predict memory recovery?\")\n\n`geom_smooth()` using formula = 'y ~ x'",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+    ]
+  },
+  {
+    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#step-1-fit-the-model",
+    "href": "sessions/05-slr-clinical-neuropsychology/index.html#step-1-fit-the-model",
+    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
+    "section": "Step 1: Fit the model",
+    "text": "Step 1: Fit the model\n\n# Fit the simple linear regression\nlmRehab &lt;- lm(memoryGain ~ trainingHours, data = dataRehab)\nlmRehab\n\n\nCall:\nlm(formula = memoryGain ~ trainingHours, data = dataRehab)\n\nCoefficients:\n  (Intercept)  trainingHours  \n      -0.8332         0.9286  \n\n# Inspect the full output\nsummary(lmRehab)\n\n\nCall:\nlm(formula = memoryGain ~ trainingHours, data = dataRehab)\n\nResiduals:\n    Min      1Q  Median      3Q     Max \n-6.8659 -1.9786  0.4249  2.6534  7.0081 \n\nCoefficients:\n              Estimate Std. Error t value Pr(&gt;|t|)   \n(Intercept)    -0.8332     3.9555  -0.211  0.83643   \ntrainingHours   0.9286     0.2730   3.401  0.00473 **\n---\nSignif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n\nResidual standard error: 4.189 on 13 degrees of freedom\nMultiple R-squared:  0.4709,    Adjusted R-squared:  0.4302 \nF-statistic: 11.57 on 1 and 13 DF,  p-value: 0.004729\n\nanova(lmRehab)\n\n\n  \n\n\n# The estimated slope can be compared to the true value beta_T = 0.8 used to generate the data.",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+    ]
+  },
+  {
+    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#step-2-manual-slope-and-intercept",
+    "href": "sessions/05-slr-clinical-neuropsychology/index.html#step-2-manual-slope-and-intercept",
+    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
+    "section": "Step 2: Manual slope and intercept",
+    "text": "Step 2: Manual slope and intercept\n\nmeans &lt;- apply(dataRehab, 2, mean)\nstdvs &lt;- apply(dataRehab, 2, sd)\nmeans\n\n   memoryGain trainingHours \n     12.10837      13.93694 \n\nstdvs\n\n   memoryGain trainingHours \n     5.549393      4.100973 \n\n# Pearson r\nr &lt;- with(dataRehab, cor(memoryGain, trainingHours))\nr\n\n[1] 0.6862163\n\n# Slope from correlation: beta = r * (SD_y / SD_x)\nhat_beta &lt;- unname(r * (stdvs[\"memoryGain\"] / stdvs[\"trainingHours\"]))\nhat_beta\n\n[1] 0.9285805\n\n# Intercept: alpha = mean_y - beta * mean_x\nhat_alpha &lt;- unname(means[\"memoryGain\"] - hat_beta * means[\"trainingHours\"])\nhat_alpha\n\n[1] -0.8332003\n\n# Compare to lm()\ncoef(lmRehab)\n\n  (Intercept) trainingHours \n   -0.8332003     0.9285805",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+    ]
+  },
+  {
+    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#step-3-sums-of-squares-and-r-squared",
+    "href": "sessions/05-slr-clinical-neuropsychology/index.html#step-3-sums-of-squares-and-r-squared",
+    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
+    "section": "Step 3: Sums of squares and R-squared",
+    "text": "Step 3: Sums of squares and R-squared\n\nfitted_vals   &lt;- hat_alpha + hat_beta * dataRehab$trainingHours\nresidual_vals &lt;- dataRehab$memoryGain - fitted_vals\n\nSS_Tot &lt;- unname((n - 1) * stdvs[\"memoryGain\"]^2)       # total variability in Y\nSS_Reg &lt;- sum((fitted_vals - means[\"memoryGain\"])^2)     # explained by training hours\nSS_Res &lt;- sum(residual_vals^2)                           # unexplained (residuals)\nSS_Tot\n\n[1] 431.1407\n\nSS_Reg\n\n[1] 203.021\n\nSS_Res\n\n[1] 228.1197\n\n# check: SS_Tot == SS_Reg + SS_Res\ndplyr::near(SS_Tot, SS_Reg + SS_Res)\n\n[1] TRUE\n\n# Compare to anova()\nanova(lmRehab)\n\n\n  \n\n\n# R-squared: proportion of variance in memory gain explained by training dose\nR_sq &lt;- SS_Reg / SS_Tot\nR_sq\n\n[1] 0.4708928",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+    ]
+  },
+  {
+    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#step-4-f-statistic-and-p-value",
+    "href": "sessions/05-slr-clinical-neuropsychology/index.html#step-4-f-statistic-and-p-value",
+    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
+    "section": "Step 4: F-statistic and p-value",
+    "text": "Step 4: F-statistic and p-value\n\nMS_Reg &lt;- SS_Reg / 1          # df_model = 1 (one predictor)\nMS_Res &lt;- SS_Res / (n - 2)    # df_residual = n - 2\nF_stat &lt;- MS_Reg / MS_Res\nMS_Reg\n\n[1] 203.021\n\nMS_Res\n\n[1] 17.54767\n\nF_stat\n\n[1] 11.56969\n\n# p-value from the F distribution\npf(F_stat, df1 = 1, df2 = n - 2, lower.tail = FALSE)\n\n[1] 0.004729361",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
+    ]
+  },
+  {
+    "objectID": "sessions/05-slr-clinical-neuropsychology/index.html#step-5-diagnostics",
+    "href": "sessions/05-slr-clinical-neuropsychology/index.html#step-5-diagnostics",
+    "title": "5 · Simple linear regression: cognitive rehabilitation and memory gain",
+    "section": "Step 5: Diagnostics",
+    "text": "Step 5: Diagnostics\n\npar(mfrow = c(2, 2))\nplot(lmRehab)\n\n\n\n\n\n\n\ndev.off()\n\n# Check: normality of residuals (Q-Q plot), linearity (residuals vs fitted),\n# homoscedasticity (scale-location), and influential cases (Cook's distance).",
+    "crumbs": [
+      "Start here",
+      "Practicals",
+      "5 · Simple linear regression: cognitive rehabilitation and memory gain"
     ]
   },
   {
